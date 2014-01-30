@@ -1,0 +1,11 @@
+sub load_db { 
+	my @people = ([qw/Adam 21/], [qw/Dan 23/]);
+
+	$db->raw(query=>"CREATE TABLE dbix_raw ( id INTEGER PRIMARY KEY ASC, name varchar(255), age int)");
+
+	for(@people) { 
+		$db->raw(query=>"INSERT INTO dbix_raw(name,age) VALUES(?, ?)", vals => $_);
+	}
+}
+
+1;

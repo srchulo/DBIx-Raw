@@ -1,8 +1,61 @@
 package DBIx::Raw;
-
-use 5.006;
 use strict;
-use warnings FATAL => 'all';
+use Mouse;
+use DBI;
+use Config::Any;
+use Gantry::Utils::Crypt;
+
+#have an errors file to write to
+has 'dsn'    => ( is => 'rw', isa => 'Any', default => undef);
+has 'user'    => ( is => 'rw', isa => 'Any', default => undef);
+has 'password'    => ( is => 'rw', isa => 'Any', default => undef);
+has 'conf'    => ( is => 'ro', isa => 'Any', default => undef);
+has 'crypt_salt'    => ( is => 'rw', isa => 'Str', default => 'xfasdfa8823423sfasdfalkj!@#$$CCCFFF!09xxxxlai3847lol13234408!!@#$_+-083dxje380-=0');
+
+has 'crypt'    => ( 
+	is => 'ro', 
+	isa => 'Gantry::Utils::Crypt', 
+	lazy => 1,
+	default => sub { 
+		my ($self) = @_;
+		return Gantry::Utils::Crypt->new ( { secret => $self->crypt_salt });
+	},
+);
+
+has 'sth'    => ( is => 'rw', isa => 'Any', default => undef); #LAST STH USED
+
+#find out what DBH is specifically
+has 'dbh'    => ( 
+	is => 'rw', 
+	isa => 'Any', 
+	lazy => 1, 
+	default => sub { 
+		my ($self) = @_;
+		my $dbh = DBI->connect($self->dsn, $self->user, $self->password) or die $DBI::errstr;
+		return $dbh;
+});
+
+sub BUILD {
+	my ($self) = @_;
+
+	#load in configuration if it exists
+	if($self->conf) { 
+		my $config = Config::Any->load_files({files =>[$self->conf],use_ext => 1  }); 
+
+		for my $c (@$config){
+  			for my $file (keys %$c){
+     			for my $attribute (keys %{$c->{$file}}){
+					if($self->can($attribute)) { 
+						$self->$attribute($c->{$file}->{$attribute});
+					}
+   				}
+  			}
+		}
+	}
+
+	die "Need to specify 'dsn', 'user', and 'password' either when you create the object or by passing in a configuration file in 'conf'!" 
+		unless defined $self->dsn and defined $self->user and defined $self->password;
+}
 
 =head1 NAME
 
@@ -15,7 +68,6 @@ Version 0.01
 =cut
 
 our $VERSION = '0.01';
-
 
 =head1 SYNOPSIS
 
@@ -35,18 +87,91 @@ if you don't export anything, such as for a purely object-oriented module.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
+=head2 raw
 
 =cut
 
-sub function1 {
+sub raw {
+	my ($self, %params) = @_;
+	my ($return_value, $return_array, @return_values);
+
+	my $sth = $self->dbh->prepare($params{'query'}) or $self->_perish(\%params);
+
+	#if user asked for values to be encrypted
+	if($params{'encrypt'}) {
+		for my $index (@{$params{'encrypt'}}) {
+			#pointers????????
+    		@{$params{'vals'}}[$index] = $self->_encrypt( @{$params{'vals'}}[$index] );
+		}
+	}
+
+
+	if($params{'vals'}) {
+  		$sth->execute(@{$params{'vals'}}) or $self->_perish(\%params);
+	}
+	else {
+		$sth->execute() or $self->_perish(\%params);
+	}
+
+	return $sth if $params{'ret_sth'};
+	#return $sth->fetchrow_hashref if $params{'href'};
+
+	if($params{'query'} =~ /^(\n*?| *?|\r*?)UPDATE /si){
+  		$return_value = $sth->rows();
+	}
+	elsif (($params{'query'} =~ /SELECT /sig) || ($params{'query'} =~ /SHOW /sig)) {
+  		unless($params{'query'}=~/INSERT INTO (.*?)SELECT /sig){
+  			if($params{'hashref'}) { #DOCUMENTATION?????
+  				my $href = $sth->fetchrow_hashref;
+	  			if($params{'decrypt'}) { 
+					for my $key (@{$params{'decrypt'}}) {
+			    		$href->{$key} = $self->_decrypt($href->{$key}) if $href->{$key};
+					} 	
+	  			}
+
+  				return $href;
+			}
+
+    		@return_values = $sth->fetchrow_array() or $self->_perish(\%params);
+
+			if($params{'decrypt'}) {
+				for my $index (@{$params{'decrypt'}}) {
+		    		$return_values[$index] = $self->_decrypt( $return_values[$index] ) if $return_values[$index];
+				}
+			}
+    
+    		if($#return_values <= 0) {
+      			$return_value = $return_values[0];
+    		}
+			else {
+      			$return_array = 1;
+			}
+		} 
+	} 
+
+	my $rcf = $sth->finish or $self->_perish(\%params);
+
+	unless($return_array) {
+  		return $return_value;
+	}
+	else{
+  		return @return_values;
+	}
 }
 
-=head2 function2
+sub _perish { 
+	my ($self, $params) = @_;
+	die "ERROR: Can't prepare query.\n\n$DBI::errstr\n\nquery='" . $params->{query} . "'\n";
+}
 
-=cut
+sub _encrypt { 
+	my ($self, $text) = @_;
+	return $self->crypt->encrypt($text); 
+}
 
-sub function2 {
+sub _decrypt { 
+	my ($self, $text) = @_;
+	return $self->crypt->decrypt($text); 
 }
 
 =head1 AUTHOR
