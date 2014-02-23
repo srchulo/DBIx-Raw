@@ -3,6 +3,8 @@ abstract: 'The great new DBIx::Raw!'
 author:
   - 'Adam Hopkins <srchulo@cpan.org>'
 build_requires:
+  CWD: 0
+  DBD::SQLite: 0
   Test::More: 0
 configure_requires:
   ExtUtils::MakeMaker: 0
@@ -19,8 +21,10 @@ no_index:
     - inc
 requires:
   Config::Any: 0
+  Crypt::CBC: 0
   DBI: 0
-  Gantry::Utils::Crypt: 0
+  Digest::MD5: 0
+  MIME::Base64: 0
   Mouse: 0
   perl: 5.006
 version: 0.01

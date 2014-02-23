@@ -13,13 +13,13 @@
 
 #     ABSTRACT_FROM => q[lib/DBIx/Raw.pm]
 #     AUTHOR => [q[Adam Hopkins <srchulo@cpan.org>]]
-#     BUILD_REQUIRES => { Test::More=>q[0] }
+#     BUILD_REQUIRES => { Test::More=>q[0], DBD::SQLite=>q[0], CWD=>q[0] }
 #     CONFIGURE_REQUIRES => { ExtUtils::MakeMaker=>q[0] }
 #     LICENSE => q[Artistic_2_0]
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[DBIx::Raw]
 #     PL_FILES => {  }
-#     PREREQ_PM => { Test::More=>q[0], Mouse=>q[0], Config::Any=>q[0], Gantry::Utils::Crypt=>q[0], DBI=>q[0] }
+#     PREREQ_PM => { DBD::SQLite=>q[0], CWD=>q[0], Crypt::CBC=>q[0], Test::More=>q[0], MIME::Base64=>q[0], Mouse=>q[0], Digest::MD5=>q[0], Config::Any=>q[0], DBI=>q[0] }
 #     VERSION_FROM => q[lib/DBIx/Raw.pm]
 #     clean => { FILES=>q[DBIx-Raw-*] }
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
@@ -187,12 +187,12 @@ PERL_ARCHIVE       =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = conf.pl \
-	crypt.pl \
-	lib/DBIx/Raw.pm
+TO_INST_PM = crypt.pl \
+	lib/DBIx/Raw.pm \
+	lib/DBIx/Raw/Crypt.pm
 
-PM_TO_BLIB = conf.pl \
-	$(INST_LIB)/DBIx/conf.pl \
+PM_TO_BLIB = lib/DBIx/Raw/Crypt.pm \
+	blib/lib/DBIx/Raw/Crypt.pm \
 	crypt.pl \
 	$(INST_LIB)/DBIx/crypt.pl \
 	lib/DBIx/Raw.pm \
@@ -490,6 +490,8 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) 'author:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  - '\''Adam Hopkins <srchulo@cpan.org>'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'build_requires:' >> META_new.yml
+	$(NOECHO) $(ECHO) '  CWD: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  DBD::SQLite: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Test::More: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
@@ -506,8 +508,10 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Config::Any: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Crypt::CBC: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBI: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Gantry::Utils::Crypt: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Digest::MD5: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  MIME::Base64: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mouse: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: 5.006' >> META_new.yml
 	$(NOECHO) $(ECHO) 'version: 0.01' >> META_new.yml
@@ -537,6 +541,8 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '   "prereqs" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '      "build" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
+	$(NOECHO) $(ECHO) '            "CWD" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "DBD::SQLite" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Test::More" : "0"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
@@ -548,8 +554,10 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Config::Any" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Crypt::CBC" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBI" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Gantry::Utils::Crypt" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Digest::MD5" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "MIME::Base64" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mouse" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "perl" : "5.006"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
@@ -859,8 +867,10 @@ ppd :
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,006,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Config::Any" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Crypt::CBC" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Gantry::Utils::Crypt" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Digest::MD5" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="MIME::Base64" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mouse::" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="darwin-thread-multi-2level-5.16" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <CODEBASE HREF="" />' >> $(DISTNAME).ppd
@@ -872,7 +882,7 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  conf.pl $(INST_LIB)/DBIx/conf.pl \
+	  lib/DBIx/Raw/Crypt.pm blib/lib/DBIx/Raw/Crypt.pm \
 	  crypt.pl $(INST_LIB)/DBIx/crypt.pl \
 	  lib/DBIx/Raw.pm blib/lib/DBIx/Raw.pm 
 	$(NOECHO) $(TOUCH) pm_to_blib

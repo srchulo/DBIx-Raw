@@ -22,6 +22,8 @@
    "prereqs" : {
       "build" : {
          "requires" : {
+            "CWD" : "0",
+            "DBD::SQLite" : "0",
             "Test::More" : "0"
          }
       },
@@ -33,8 +35,10 @@
       "runtime" : {
          "requires" : {
             "Config::Any" : "0",
+            "Crypt::CBC" : "0",
             "DBI" : "0",
-            "Gantry::Utils::Crypt" : "0",
+            "Digest::MD5" : "0",
+            "MIME::Base64" : "0",
             "Mouse" : "0",
             "perl" : "5.006"
          }

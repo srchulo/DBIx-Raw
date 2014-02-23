@@ -16,12 +16,16 @@ WriteMakefile(
     },
     BUILD_REQUIRES => {
         'Test::More' => 0,
+        'DBD::SQLite' => 0,
+        'CWD' => 0,
     },
     PREREQ_PM => {
         'Mouse'              => 0,
         'DBI'              => 0,
-        'Gantry::Utils::Crypt' => 0,
         'Config::Any' => 0,
+        'Crypt::CBC' => 0,
+        'MIME::Base64' => 0,
+        'Digest::MD5' => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'DBIx-Raw-*' },

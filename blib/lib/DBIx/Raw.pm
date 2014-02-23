@@ -407,7 +407,6 @@ sub _crypt {
 					#NEED COUNT HERE
 					#IF MORE THAN TWO ('s, then we know! but that's as long as they're not in quotes...
 					#REMOVE ANY ( or )'s that are not between '' or ""
-					#HANDLE CASE WHERE LONGER THAN first arr!!!!!
 				}
 
 				for my $name (@{$params->{encrypt}}) { 
