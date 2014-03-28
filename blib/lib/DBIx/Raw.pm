@@ -45,6 +45,10 @@ has 'keys' => (
 		encrypt => 1,
 		decrypt => 1,
 		key => 1,
+		href => 1,
+		table => 1,
+		where => 1,
+		where_clause => 1,
 	} },
 );
 
@@ -120,7 +124,7 @@ sub raw {
 
 	#if user asked for values to be encrypted
 	if($params->{encrypt}) {
-		$self->_crypt($params);
+		$self->_crypt_encrypt($params);
 	}
 
 	$self->_query($params);
@@ -152,7 +156,10 @@ sub raw {
   		unless($params->{query} =~ /INSERT INTO (.*?)SELECT /sig) {
   			if($return_type eq 'hash') {
 				$params->{href} = $self->sth->fetchrow_hashref;
-				$self->_crypt($params);
+
+				if($params->{decrypt}) {
+					$self->_crypt_decrypt($params);
+				}
 
   				push @return_values, $params->{href};
 			}
@@ -161,7 +168,7 @@ sub raw {
 
 				if($params->{decrypt}) {
 					$params->{return_values} = \@return_values;
-					$self->_crypt($params);
+					$self->_crypt_decrypt($params);
 				}
 			}
 		} 
@@ -177,27 +184,9 @@ sub raw {
 	}
 }
 
-=head2 array
+=head2 aoh (array_of_hashes)
 
 =cut
-
-sub array {
-	my $self = shift;
-	my $params = $self->_params(@_);
-	my ($r,@a);
-
-	# Get the Array of results:
-	$self->_query($params);
-	while(($r) = $self->sth->fetchrow_array()){
-		if($params->{decrypt}) { 
-	  		$r = $self->_decrypt($r);
-		} 	
-	
-		push @a, $r;
-	}
-
-	return \@a;
-}
 
 sub aoh {
 	my $self = shift;
@@ -205,16 +194,24 @@ sub aoh {
 	my ($href,@a);
 
 	$self->_query($params);
-	while($href=$self->sth->fetchrow_hashref){
-		$params->{href} = $href;
-		$self->_crypt($params);
-  		push @a, $href;
+
+	if($params->{decrypt}) {
+		while($href=$self->sth->fetchrow_hashref){
+			$params->{href} = $href;
+			$self->_crypt_decrypt($params);
+  			push @a, $href;
+		}
+	}
+	else { 
+		while($href=$self->sth->fetchrow_hashref){
+  			push @a, $href;
+		}
 	}
 
 	return \@a;
 }
 
-=head2 hash_of_hashes
+=head2 hoh (hash_of_hashes)
 
 #pass in href and add to it
 =cut
@@ -228,50 +225,25 @@ sub hoh {
 
 	$self->_query($params);
 
-	while($href=$self->sth->fetchrow_hashref){
-		$params->{href} = $href;
-		$self->_crypt($params);
-		$hoh->{$href->{$params->{key}}} = $href;
+	if($params->{decrypt}) {
+		while($href=$self->sth->fetchrow_hashref){
+			$params->{href} = $href;
+			$self->_crypt_decrypt($params);
+			$hoh->{$href->{$params->{key}}} = $href;
+		}
+	}
+	else { 
+		while($href=$self->sth->fetchrow_hashref){
+			$hoh->{$href->{$params->{key}}} = $href;
+		}
 	}
 
 	return $hoh;
 } 
 
-sub hoaoh {
-	my $self = shift;
-	my $params = $self->_params(@_);
-	my ($href);
+=head2 hoa (hash_of_arrays)
 
-	my $hoa = $params->{href}; #if hashref is passed it, it will just add to it
-
-	$self->_query($params);
-
-	while($href=$self->sth->fetchrow_hashref){
-		$params->{href} = $href;
-		$self->_crypt($params);
-		push @{$hoa->{$href->{$params->{key}}}},$href;
-	}
-
-	return $hoa;
-}
-
-sub hash {
-	my $self = shift;
-	my $params = $self->_params(@_);
-	my ($href);
-
-	my $hash = $params->{href}; #if hash is passed it, it will just add to it
-
-	$self->_query($params);
-
-	while($href=$self->sth->fetchrow_hashref){
-		$params->{href} = $href;
-		$self->_crypt;
-		$hash->{$href->{$params->{key}}} = $href->{$params->{val}};
-	}
-
-	return $hash;
-}
+=cut
 
 sub hoa {
 	my $self = shift;
@@ -282,39 +254,174 @@ sub hoa {
 
 	$self->_query($params);
 
-	while($href=$self->sth->fetchrow_hashref){
-		$params->{href} = $href;
-		$self->_crypt;
-		push @{$hash->{$href->{$params->{key}}}}, $href->{$params->{val}};
+	if($params->{decrypt}) {
+		while($href=$self->sth->fetchrow_hashref){
+			$params->{href} = $href;
+			$self->_crypt_decrypt($params);
+			push @{$hash->{$href->{$params->{key}}}}, $href->{$params->{val}};
+		}
+	}
+	else { 
+		while($href=$self->sth->fetchrow_hashref){
+			push @{$hash->{$href->{$params->{key}}}}, $href->{$params->{val}};
+		}
 	}
 
 	return $hash;
 }
 
-#ALSO MAKE ARRAYS UPDATE
-#update without using taint mode?
-sub hash_update {
+=head2 hoaoh (hash_of_array_of_hashes)
+
+=cut
+
+sub hoaoh {
 	my $self = shift;
 	my $params = $self->_params(@_);
 	my ($href);
 
+	my $hoa = $params->{href}; #if hashref is passed it, it will just add to it
+
+	$self->_query($params);
+
+	if($params->{decrypt}) {
+		while($href=$self->sth->fetchrow_hashref){
+			$params->{href} = $href;
+			$self->_crypt_decrypt($params);
+			push @{$hoa->{$href->{$params->{key}}}},$href;
+		}
+	}
+	else { 
+		while($href=$self->sth->fetchrow_hashref){
+			push @{$hoa->{$href->{$params->{key}}}},$href;
+		}
+	}
+
+	return $hoa;
+}
+
+=head2 array
+
+=cut
+
+sub array {
+	my $self = shift;
+	my $params = $self->_params(@_);
+	my ($r,@a);
+
+	# Get the Array of results:
+	$self->_query($params);
+	if($params->{decrypt}) { 
+		while(($r) = $self->sth->fetchrow_array()){
+	  		$r = $self->_decrypt($r);
+			push @a, $r;
+		}
+	} 	
+	else {
+		while(($r) = $self->sth->fetchrow_array()){
+			push @a, $r;
+		}
+	}
+
+	return \@a;
+}
+
+=head2 hash
+
+=cut
+
+sub hash {
+	my $self = shift;
+	my $params = $self->_params(@_);
+	my ($href);
+
+	my $hash = $params->{href}; #if hash is passed it, it will just add to it
+
+	$self->_query($params);
+
+	if($params->{decrypt}) {
+		while($href=$self->sth->fetchrow_hashref){
+			$params->{href} = $href;
+			$self->_crypt_decrypt($params);
+			$hash->{$href->{$params->{key}}} = $href->{$params->{val}};
+		}
+	}
+	else { 
+		while($href=$self->sth->fetchrow_hashref){
+			$hash->{$href->{$params->{key}}} = $href->{$params->{val}};
+		}
+	}
+
+	return $hash;
+}
+
+=head2 hash_update
+
+=cut
+#update without using taint mode?
+#encrypt for hash_update?
+sub hash_update {
+	my $self = shift;
+	my $params = $self->_params(@_);
+
+	die "table must be provided for hash_update" unless $params->{table};
+
 	my @vals;
 	my $string = '';
-	while(my ($key,$val) = each %{$params->{hash}}) { 
+	#JUST HAVE ENCRYPTAFTER WARDS BY CALLING sub _crypt_encrypt??? then will change vals
+	while(my ($key,$val) = each %{$params->{href}}) { 
 		my $append = '?';
 		if (ref $val eq 'SCALAR') {
 			$append = $$val;
 		}
+		else { 
+			push @vals, $val;
+		}
 
 		$string .= "$key=$append,";
-		push @vals, $val;
 	}
+	
 	$string = substr $string, 0, -1;
 
-	push @vals, @{$params->{where_value}};
+	$params->{vals} = [] unless $params->{vals};
+	my $where = '';
+	if($params->{where}) { 
+		$where = " WHERE $params->{where}";	
+		push @vals, @{$params->{vals}};
+	}
+	#PUT IN DOCUMENTATION id, and PK
+	#Must be EITHER OR, not both!
+	#test no id
+	#test id
+	#test id with other where vals
+	#test SCALAR like \'Now()'
+	if($params->{id}) { 
+		if($where eq '') { 
+			$where = " WHERE id=? ";	
+		}	
+		else { 
+			$where .= " AND id=? ";
+		}
 
-	$params->{query} = "UPDATE $params->{table} SET $string WHERE $params->{where}";
+		push @vals, $params->{id};
+	}
+	elsif($params->{pk}) { 
+		my $name = $params->{pk}->{name};
+		my $val = $params->{pk}->{val};
+		if($where eq '') { 
+			$where = " WHERE $name=? ";	
+		}	
+		else { 
+			$where .= " AND $name=? ";
+		}
+
+		push @vals, $val;
+	}
+
+	$params->{query} = "UPDATE $params->{table} SET $string $where";
 	$params->{vals} = \@vals;
+
+	$self->_crypt_encrypt($params) if $params->{encrypt};
+
 	$self->_query($params);
 } 
 
@@ -351,95 +458,52 @@ sub _perish {
 	die "ERROR: Can't prepare query.\n\n$DBI::errstr\n\nquery='" . $params->{query} . "'\n";
 }
 
-sub _crypt { 
+sub _crypt_decrypt { 
 	my ($self, $params) = @_;
-
-	if($params->{decrypt}) { 
-		my @keys;
-		if($params->{decrypt} and $params->{decrypt} eq '*') { 
-			if($params->{href}) { 
-				@keys = keys %{$params->{href}};
-			}
-			else { 
-				@keys = 0..$#{$params->{return_values}};
-			}
+	my @keys;
+	if($params->{decrypt} eq '*') { 
+		if($params->{href}) { 
+			@keys = keys %{$params->{href}};
 		}
 		else { 
-			@keys = @{$params->{decrypt}};
-		}
-
-		if($params->{href}) {
-			for my $key (@keys) {
-				$params->{href}->{$key} = $self->_decrypt($params->{href}->{$key}) if $params->{href}->{$key};
-			} 	
-		}
-		else { 
-			for my $index (@keys) {
-				$params->{return_values}->[$index] = $self->_decrypt( $params->{return_values}->[$index] ) if $params->{return_values}->[$index];
-			}
+			@keys = 0..$#{$params->{return_values}};
 		}
 	}
-	elsif($params->{encrypt}) { 
-		my @indices; 
+	else { 
+		@keys = @{$params->{decrypt}};
+	}
 
-		if($params->{encrypt} and $params->{encrypt} eq '*') { 
-			my $num_question_marks = 0;
-			#don't want to encrypt where conditions! Might be buggy...should look into this more
-			if($params->{query} =~ /WHERE\s+(.*)/i) { 
-				$num_question_marks =()= $1 =~ /=\s*?\?/g;
-			}
-
-			@indices = 0..($#{$params->{vals}} - $num_question_marks);
+	if($params->{href}) {
+		for my $key (@keys) {
+			$params->{href}->{$key} = $self->_decrypt($params->{href}->{$key}) if $params->{href}->{$key};
+		} 	
+	}
+	else { 
+		for my $index (@keys) {
+			$params->{return_values}->[$index] = $self->_decrypt( $params->{return_values}->[$index] ) if $params->{return_values}->[$index];
 		}
-		else { 
-			if(@{$params->{encrypt}} > 0 and $params->{encrypt}->[0] =~ /^-?\d+$/) {
-				@indices = @{$params->{encrypt}};
-			}
-			elsif($params->{query} =~ /\s+\((.*?)\)\s+VALUES/i) { 
-				my $match = $1;
-				$match =~ s/\s+//g;
-				my @arr = split ',', $match;
+	}
+}
 
-				my %hash;
-				for my $i (0..$#arr) { 
-					$hash{$arr[$i]} = $i;
-					print "$arr[$i] is $i\n";
-					#NEED COUNT HERE
-					#IF MORE THAN TWO ('s, then we know! but that's as long as they're not in quotes...
-					#REMOVE ANY ( or )'s that are not between '' or ""
-				}
+sub _crypt_encrypt { 
+	my ($self, $params) = @_;
+	my @indices; 
 
-				for my $name (@{$params->{encrypt}}) { 
-					push @indices, $hash{$name};
-				}
-			}
-			elsif($params->{query} =~ /SET\s+(.*?)$/i) { 
-				my $match = $1;
-				$match =~ s/WHERE.*//gi;
-				$match =~ s/\s+//g;
-				my @arr = split ',', $match;
-
-				my %hash;
-				my $count = 0;
-				for my $i (0..$#arr) { 
-					$arr[$i] =~ s/=(.*)//g;
-					my $temp = $1;
-					$temp =~ s/\s//g;
-					next unless $temp eq '?'; # if it's not in our values array, we don't care!
-					$hash{$arr[$i]} = $count; 
-					print "$count is $arr[$i]\n";
-					$count++;
-				}
-
-				for my $name (@{$params->{encrypt}}) { 
-					push @indices, $hash{$name};
-				}
-			}
+	if($params->{encrypt} eq '*') { 
+		my $num_question_marks = 0;
+		#don't want to encrypt where conditions! Might be buggy...should look into this more
+		if($params->{query} =~ /WHERE\s+(.*)/i) { 
+			$num_question_marks =()= $1 =~ /=\s*?\?/g;
 		}
 
-		for my $index (@indices) {
-    		@{$params->{'vals'}}[$index] = $self->_encrypt( @{$params->{'vals'}}[$index] );
-		}
+		@indices = 0..($#{$params->{vals}} - $num_question_marks);
+	}
+	else { 
+		@indices = @{$params->{encrypt}};
+	}
+
+	for my $index (@indices) {
+   		@{$params->{vals}}[$index] = $self->_encrypt( @{$params->{vals}}[$index] );
 	}
 }
 

@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "DBIx::Raw 3"
-.TH DBIx::Raw 3 "2014-02-21" "perl v5.16.2" "User Contributed Perl Documentation"
+.TH DBIx::Raw 3 "2014-03-27" "perl v5.16.2" "User Contributed Perl Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -160,11 +160,21 @@ crypt_salt
 \&\f(CW$db\fR\->raw(query=>);
 decrypt * 
 encrypt *
+.SS "aoh (array_of_hashes)"
+.IX Subsection "aoh (array_of_hashes)"
+.SS "hoh (hash_of_hashes)"
+.IX Subsection "hoh (hash_of_hashes)"
+#pass in href and add to it
+.SS "hoa (hash_of_arrays)"
+.IX Subsection "hoa (hash_of_arrays)"
+.SS "hoaoh (hash_of_array_of_hashes)"
+.IX Subsection "hoaoh (hash_of_array_of_hashes)"
 .SS "array"
 .IX Subsection "array"
-.SS "hash_of_hashes"
-.IX Subsection "hash_of_hashes"
-#pass in href and add to it
+.SS "hash"
+.IX Subsection "hash"
+.SS "hash_update"
+.IX Subsection "hash_update"
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Adam Hopkins, \f(CW\*(C`<srchulo at cpan.org>\*(C'\fR

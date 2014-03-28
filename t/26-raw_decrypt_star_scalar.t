@@ -12,7 +12,7 @@ use_ok( 'DBIx::Raw' ) || print "Bail out!\n";
 
 my $people = people();
 my $db = prepare();
-$db->raw(query=>"UPDATE dbix_raw SET name=? WHERE id=?", vals=>[$people->[0]->[0], 1], encrypt=>'*');
+$db->raw(query=>"UPDATE dbix_raw SET name=?,favorite_color=? WHERE id=?", vals=>[$people->[0]->[0], $people->[0]->[2], 1], encrypt=>'*');
 
 my $decrypted_name = $db->raw(query=>"SELECT name FROM dbix_raw WHERE id=?", vals=>[1], decrypt=> '*');
 
