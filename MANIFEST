@@ -71,5 +71,3 @@ t/dbix_conf.pl
 t/dbix_conf.yaml
 t/dbixtest.pm
 t/manifest.t
-t/pod-coverage.t
-t/pod.t
