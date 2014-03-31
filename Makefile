@@ -188,13 +188,10 @@ PERL_ARCHIVE_AFTER =
 
 
 TO_INST_PM = lib/DBIx/Raw.pm \
-	lib/DBIx/Raw/Crypt.pm \
-	yo.pl
+	lib/DBIx/Raw/Crypt.pm
 
 PM_TO_BLIB = lib/DBIx/Raw/Crypt.pm \
 	blib/lib/DBIx/Raw/Crypt.pm \
-	yo.pl \
-	$(INST_LIB)/DBIx/yo.pl \
 	lib/DBIx/Raw.pm \
 	blib/lib/DBIx/Raw.pm
 
@@ -888,7 +885,6 @@ ppd :
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  lib/DBIx/Raw/Crypt.pm blib/lib/DBIx/Raw/Crypt.pm \
-	  yo.pl $(INST_LIB)/DBIx/yo.pl \
 	  lib/DBIx/Raw.pm blib/lib/DBIx/Raw.pm 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
