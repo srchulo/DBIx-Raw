@@ -13,13 +13,13 @@
 
 #     ABSTRACT_FROM => q[lib/DBIx/Raw.pm]
 #     AUTHOR => [q[Adam Hopkins <srchulo@cpan.org>]]
-#     BUILD_REQUIRES => { Test::More=>q[0], DBD::SQLite=>q[0], CWD=>q[0] }
+#     BUILD_REQUIRES => { Test::More=>q[0], DBD::SQLite=>q[0], CWD=>q[0], Test::Carp=>q[0] }
 #     CONFIGURE_REQUIRES => { ExtUtils::MakeMaker=>q[0] }
 #     LICENSE => q[Artistic_2_0]
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[DBIx::Raw]
 #     PL_FILES => {  }
-#     PREREQ_PM => { DBD::SQLite=>q[0], CWD=>q[0], Crypt::CBC=>q[0], Test::More=>q[0], MIME::Base64=>q[0], Mouse=>q[0], Digest::MD5=>q[0], Config::Any=>q[0], DBI=>q[0] }
+#     PREREQ_PM => { DBD::SQLite=>q[0], CWD=>q[0], Test::Carp=>q[0], Carp=>q[0], Crypt::CBC=>q[0], Test::More=>q[0], MIME::Base64=>q[0], Mouse=>q[0], Digest::MD5=>q[0], Config::Any=>q[0], DBI=>q[0] }
 #     VERSION_FROM => q[lib/DBIx/Raw.pm]
 #     clean => { FILES=>q[DBIx-Raw-*] }
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
@@ -486,12 +486,13 @@ realclean purge ::  clean realclean_subdirs
 metafile : create_distdir
 	$(NOECHO) $(ECHO) Generating META.yml
 	$(NOECHO) $(ECHO) '---' > META_new.yml
-	$(NOECHO) $(ECHO) 'abstract: '\''The great new DBIx::Raw!'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'abstract: '\''Maintain control of SQL queries while still having a layer of abstraction above DBI'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'author:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  - '\''Adam Hopkins <srchulo@cpan.org>'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'build_requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  CWD: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBD::SQLite: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Test::Carp: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Test::More: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
@@ -507,6 +508,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '    - t' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Carp: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Config::Any: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Crypt::CBC: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBI: 0' >> META_new.yml
@@ -518,7 +520,7 @@ metafile : create_distdir
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
-	$(NOECHO) $(ECHO) '   "abstract" : "The great new DBIx::Raw!",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "abstract" : "Maintain control of SQL queries while still having a layer of abstraction above DBI",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "author" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "Adam Hopkins <srchulo@cpan.org>"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
@@ -543,6 +545,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '            "CWD" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBD::SQLite" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Test::Carp" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Test::More" : "0"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
@@ -553,6 +556,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Carp" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Config::Any" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Crypt::CBC" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBI" : "0",' >> META_new.json
@@ -862,10 +866,11 @@ testdb_static :: testdb_dynamic
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
 	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="$(VERSION)">' > $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '    <ABSTRACT>The great new DBIx::Raw!</ABSTRACT>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '    <ABSTRACT>Maintain control of SQL queries while still having a layer of abstraction above DBI</ABSTRACT>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Adam Hopkins &lt;srchulo@cpan.org&gt;</AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,006,0,0" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Carp::" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Config::Any" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Crypt::CBC" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" />' >> $(DISTNAME).ppd

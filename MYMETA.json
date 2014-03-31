@@ -1,5 +1,5 @@
 {
-   "abstract" : "The great new DBIx::Raw!",
+   "abstract" : "Maintain control of SQL queries while still having a layer of abstraction above DBI",
    "author" : [
       "Adam Hopkins <srchulo@cpan.org>"
    ],
@@ -24,6 +24,7 @@
          "requires" : {
             "CWD" : "0",
             "DBD::SQLite" : "0",
+            "Test::Carp" : "0",
             "Test::More" : "0"
          }
       },
@@ -34,6 +35,7 @@
       },
       "runtime" : {
          "requires" : {
+            "Carp" : "0",
             "Config::Any" : "0",
             "Crypt::CBC" : "0",
             "DBI" : "0",

@@ -16,7 +16,7 @@ my %update = (
 	favorite_color => 'purple',
 );
 
-$db->hash_update(href=>\%update, table => 'dbix_raw');
+$db->update(href=>\%update, table => 'dbix_raw');
 
 my $aoh = $db->aoh("SELECT name, age, favorite_color FROM dbix_raw");
 

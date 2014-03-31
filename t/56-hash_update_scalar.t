@@ -19,7 +19,7 @@ my %update = (
 my $people = people_hash();
 my $p2 = $people->[1];
 
-$db->hash_update(href=>\%update, table => 'dbix_raw', id => 1);
+$db->update(href=>\%update, table => 'dbix_raw', id => 1);
 
 $update{name} = 5;
 $update{age} = 905;

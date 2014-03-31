@@ -1,10 +1,11 @@
 ---
-abstract: 'The great new DBIx::Raw!'
+abstract: 'Maintain control of SQL queries while still having a layer of abstraction above DBI'
 author:
   - 'Adam Hopkins <srchulo@cpan.org>'
 build_requires:
   CWD: 0
   DBD::SQLite: 0
+  Test::Carp: 0
   Test::More: 0
 configure_requires:
   ExtUtils::MakeMaker: 0
@@ -20,6 +21,7 @@ no_index:
     - t
     - inc
 requires:
+  Carp: 0
   Config::Any: 0
   Crypt::CBC: 0
   DBI: 0

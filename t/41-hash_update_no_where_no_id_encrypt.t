@@ -16,7 +16,7 @@ my %update = (
 	favorite_color => 'purple',
 );
 
-$db->hash_update(href=>\%update, table => 'dbix_raw', encrypt => '*');
+$db->update(href=>\%update, table => 'dbix_raw', encrypt => '*');
 
 my $aoh = $db->aoh(query => "SELECT name, age, favorite_color FROM dbix_raw", decrypt => ['name', 'age', 'favorite_color']);
 

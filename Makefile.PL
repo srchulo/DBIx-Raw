@@ -16,6 +16,7 @@ WriteMakefile(
     },
     BUILD_REQUIRES => {
         'Test::More' => 0,
+        'Test::Carp' => 0,
         'DBD::SQLite' => 0,
         'CWD' => 0,
     },
@@ -26,6 +27,7 @@ WriteMakefile(
         'Crypt::CBC' => 0,
         'MIME::Base64' => 0,
         'Digest::MD5' => 0,
+        'Carp' => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'DBIx-Raw-*' },

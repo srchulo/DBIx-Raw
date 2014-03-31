@@ -3,15 +3,15 @@ use strict;
 use Mouse;
 use DBI;
 use Config::Any;
-use lib './lib'; #REMOVE
 use DBIx::Raw::Crypt;
+use Carp;
 
 #have an errors file to write to
 has 'dsn'    => ( is => 'rw', isa => 'Any', default => undef);
 has 'user'    => ( is => 'rw', isa => 'Any', default => undef);
 has 'password'    => ( is => 'rw', isa => 'Any', default => undef);
 has 'conf'    => ( is => 'ro', isa => 'Any', default => undef);
-has 'crypt_salt'    => ( is => 'rw', isa => 'Str', default => '6883868834006296591264051568595813693328016796531185824375212916576042669669556288781800326542091901603033335703884439231366552922364658270813734165084102xfasdfa8823423sfasdfalkj!@#$$CCCFFF!09xxxxlai3847lol13234408!!@#$_+-083dxje380-=0');
+has 'crypt_key'    => ( is => 'rw', isa => 'Str', default => '6883868834006296591264051568595813693328016796531185824375212916576042669669556288781800326542091901603033335703884439231366552922364658270813734165084102xfasdfa8823423sfasdfalkj!@#$$CCCFFF!09xxxxlai3847lol13234408!!@#$_+-083dxje380-=0');
 
 has 'crypt'    => ( 
 	is => 'ro', 
@@ -19,7 +19,7 @@ has 'crypt'    => (
 	lazy => 1,
 	default => sub { 
 		my ($self) = @_;
-		return DBIx::Raw::Crypt->new ( { secret => $self->crypt_salt });
+		return DBIx::Raw::Crypt->new ( { secret => $self->crypt_key });
 	},
 );
 
@@ -32,9 +32,11 @@ has 'dbh'    => (
 	lazy => 1, 
 	default => sub { 
 		my ($self) = @_;
-		my $dbh = DBI->connect($self->dsn, $self->user, $self->password) or die $DBI::errstr;
+		my $dbh = DBI->connect($self->dsn, $self->user, $self->password) or croak($DBI::errstr);
 		return $dbh;
 });
+
+#ALLOW DBH TO BE PASSED IN
 
 has 'keys' => (
 	is => 'ro', 
@@ -70,13 +72,13 @@ sub BUILD {
 		}
 	}
 
-	die "Need to specify 'dsn', 'user', and 'password' either when you create the object or by passing in a configuration file in 'conf'!" 
-		unless defined $self->dsn and defined $self->user and defined $self->password;
+	croak "Need to specify 'dsn', 'user', and 'password' either when you create the object or by passing in a configuration file in 'conf'! Or, pass in an existing dbh" 
+		unless (defined $self->dsn and defined $self->user and defined $self->password) or defined $self->dbh;
 }
 
 =head1 NAME
 
-DBIx::Raw - The great new DBIx::Raw!
+DBIx::Raw - Maintain control of SQL queries while still having a layer of abstraction above DBI
 
 =head1 VERSION
 
@@ -88,30 +90,282 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
+DBIx::Raw allows you to have complete control over your SQL, while still providing useful functionality so you don't have to deal directly with L<DBI>.
 
     use DBIx::Raw;
+    my $db = DBIx::Raw->new(dsn => $dsn, user => $user, password => $password);
 
-    my $foo = DBIx::Raw->new();
-    ...
+    #alternatively, use a conf file
+    my $db = DBIx::Raw->new(conf => '/path/to/conf.pl');
 
-=head1 EXPORT
+    #get single values in scalar context
+    my $name = $db->raw("SELECT name FROM people WHERE id=1");
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+    #get multiple values in list context
+    my ($name, $age) = $db->raw("SELECT name, age FROM people WHERE id=1");
+	
+    #or
+    my @person = $db->raw("SELECT name, age FROM people WHERE id=1");
 
-crypt_salt
+    #get hash when using scalar context but requesting multiple values
+    my $person = $db->raw("SELECT name, age FROM people where id=1");
+    my $name = $person->{name};
+    my $age = $person->{age};
+
+    #also get hash in scalar context when selecting multiple values using '*'
+    my $person = $db->raw("SELECT * FROM people where id=1");
+    my $name = $person->{name};
+    my $age = $person->{age};
+
+    #insert a record
+    $db->raw("INSERT INTO people (name, age) VALUES ('Sally', 26)");
+
+    #insert a record with bind values to help prevent SQL injection
+    $db->raw("INSERT INTO people (name, age) VALUES (?, ?)", 'Sally', 26);
+
+    #update records
+    $db->raw("UPDATE people SET name='Joe',age=34 WHERE id=1");
+
+    #use bind values to help prevent SQL injection
+    $db->raw("UPDATE people SET name=?,age=? WHERE id=?", 'Joe', 34, 1);
+
+    #also use bind values when selecting
+    my $name = $db->raw("SELECT name FROM people WHERE id=?", 1);
+
+    #get multiple records as an array of hashes
+    my $people = $db->aoh("SELECT name, age FROM people");
+    
+    for my $person (@$people) { 
+        print "$person->{name} is $person->{age} years old\n";
+    }
+
+    #update a record easily with a hash
+    my %update = ( 
+        name => 'Joe',
+        age => 34,
+    );
+
+    #record with id=1 now has name=Joe an age=34
+    $db->update(href=>\%update, table => 'people', id=>1);
+
+    #use alternate syntax to encrypt and decrypt data
+    $db->raw(query => "UPDATE people SET name=? WHERE id=1", vals => ['Joe'], encrypt => [0]);
+
+    my $decrypted_name = $db->raw(query => "SELECT name FROM people WHERE id=1", decrypt => [0]);
+
+    #when being returned a hash, use names of field for decryption
+    my $decrypted_person = $db->raw(query => "SELECT name, age FROM people WHERE id=1", decrypt => ['name']);
+    my $decrypted_name = $decrypted_person->{name};
+
+
+=head1 INITIALIZATION
+
+There are three ways to intialize a L<DBIx::Raw> object:
+
+=head2 dsn, user, password
+
+You can initialize a L<DBIx::Raw> object by passing in the dsn, user, and password connection information.
+
+    my $db = DBIx::Raw->new(dsn => 'dbi:mysql:test:localhost:3306', user => 'user', password => 'password');
+
+=head2 dbh
+
+You can also initialize a L<DBIx::Raw> object by passing in an existing database handle.
+
+    my $db = DBIx::Raw->new(dbh => $dbh);
+
+=head2 conf
+
+If you're going to using the same connection information a lot, it's useful to store it in a configuration file and then
+use that when creating a L<DBIx::Raw> object.
+
+    my $db = DBIx::Raw->new(conf => '/path/to/conf.pl');
+
+See L<CONFIGURATION FILE|DBIx::Raw/"CONFIGURATION FILE"> for more information on how to set up a configuration file.
+
+=head1 CONFIGURATION FILE
+
+You can use a configuration file to store settings for L<DBIx::Raw> instead of passing them into new or setting them.
+L<DBIx::Raw> uses L<Config::Any>, so you can use any configuration format that is acceptable for L<Config::Any>. Variables
+that you might want to store in your configuration file are C<dsn>, C<user>, C<password>, and L</crypt_key>.
+
+Below is an example configuration file in perl format:
+
+=head2 conf.pl
+
+    { 
+        dsn => 'dbi:mysql:test:localhost:3306',
+        user => 'root', 
+        password => 'password',
+        crypt_key => 'lxsafadsfadskl23239210453453802xxx02-487900-=+1!:)',
+    }
+
+=head2 conf.yaml
+
+    ---
+    dsn: 'dbi:mysql:test:localhost:3306'
+    user: 'root'
+    password: 'password'
+    crypt_key: 'lxsafadsfadskl23239210453453802xxx02-487900-=+1!:)'
+
+Note that you do not need to include L</crypt_key> if you just if you just want to use the file for configuration settings.
+
+=head1 SYNTAXES
+
+DBIx::Raw provides two different possible syntaxes when making queries.
+
+=head2 SIMPLE SYNTAX
+
+Simple syntax is an easy way to write queries. It is always in the format:
+
+    ("QUERY");
+
+or
+
+    ("QUERY", "VAL1", "VAL2", ...);
+
+Below are some examples:
+
+    $db->raw("UPDATE people SET name='Fred'");
+
+    my $name = $db->raw("SELECT name FROM people WHERE id=1");
+	
+DBIx::Raw also supports L<DBI/"Placeholders and Bind Values"> for L<DBI>. These can be useful to help prevent SQL injection. Below are
+some examples of how to use placeholders and bind values with L</"SIMPLE SYNTAX">.
+
+    $db->raw("UPDATE people SET name=?", 'Fred');
+
+    my $name = $db->raw("SELECT name FROM people WHERE id=?", 1);
+
+    $db->raw("INSERT INTO people (name, age) VALUES (?, ?)", 'Frank', 44);
+    
+Note that L</"SIMPLE SYNTAX"> cannot be used for L</hoh>, L</hoaoh>, L</hash>, or L</update> because of the extra parameters that they require.
+
+=head2 ADVANCED SYNTAX
+
+Advanced syntax is used whenever a subroutine requires extra parameters besides just the query and bind values, or whenever you need to use L</encrypt>
+or L</decrypt>. A simple example of the advanced syntax is:
+
+    $db->raw(query => "UPDATE people SET name='Fred'");
+
+This is equivalent to:
+
+    $db->raw("UPDATE people SET name='Fred'");
+
+A slightly more complex example adds in bind values:
+
+    $db->raw(query => "UPDATE people SET name=?", vals => ['Fred']);
+
+This is equivalent to the simple syntax:
+
+    $db->raw("UPDATE people SET name=?", 'Fred');
+
+Also, advanced syntax is required whenevery you want to L</encrypt> or L</decrypt> values.
+
+    $db->raw(query => "UPDATE people SET name=?", vals => ['Fred'], encrypt => [0]);
+
+    my $decrypted_name = $db->raw(query => "SELECT name FROM people WHERE id=1", decrypt => [0]);
+
+Note that L</"ADVANCED SYNTAX"> is required for L</hoh>, L</hoaoh>, L</hash>, or L</update> because of the extra parameters that they require.
+
+=head1 ENCRYPT AND DECRYPT
+
+You can use L<DBIx::Raw> to encrypt values when putting them into the database and decrypt values when removing them from the database.
+Note that in order to store an encrypted value in the database, you should have the field be of type C<VARCHAR(255)> or some type of character
+or text field where the encryption will fit. In order to encrypt and decrypt your values, L<DBIx::Raw> requires a L</crypt_key>. It contains a default
+key, but it is recommended that you change it either by having a different one in your L</conf> file, or passing it in on creation with C<new> or setting it using the
+L</crypt_key> method. It is recommended that you use a module like L<Crypt::Random> to generate a secure key. 
+One thing to note is that both L</encrypt> and L</decrypt> require L</"ADVANCED SYNTAX">.
+
+=head2 encrypt
+
+In order to encrypt values, the values that you want to encrypt must be in the bind values array reference that you pass into C<vals>. Note that for the values that you want to
+encrypt, you should put their index into the encrypt array that you pass in. For example:
+
+    $db->raw(query => "UPDATE people SET name=?,age=?,height=? WHERE id=1", vals => ['Zoe', 24, "5'11"], encrypt => [0, 2]);
+
+In the above example, only C<name> and C<height> will be encrypted. You can easily encrypt all values by using '*', like so:
+
+    $db->raw(query => "UPDATE people SET name=?,height=? WHERE id=1", vals => ['Zoe', "5'11"], encrypt => '*');
+
+And this will encrypt both C<name> and C<height>.
+
+The only exception to the L</encrypt> syntax that is a little different is for L</update>. See L</"update encrypt"> for how to encrypt when using L</update>.
+
+=head2 decrypt
+
+When decrypting values, there are two possible different syntaxes.
+
+=head3 DECRYPT LIST CONTEXT 
+
+If your query is returning a single value or values in a list context, then the array reference that you pass in for decrypt will contain the indices for the
+order that the columns were listed in. For instance:
+
+    my $name = $db->raw(query => "SELECT name FROM people WHERE id=1", decrypt => [0]);
+
+    my ($name, $age) = $db->raw("SELECT name, age FROM people WHERE id=1", decrypt => [0,1]);
+
+=head3 DECRYPT HASH CONTEXT 
+
+When your query has L<DBIx::Raw> return your values in a hash context, then the columns that you want decrypted must be listed by name in the array reference:
+
+    my $person = $db->raw(query => "SELECT name, age FROM people WHERE id=1", decrypt => ['name', 'age'])
+
+    my $aoh = $db->aoh(query => "SELECT name, age FROM people", decrypt => ['name', 'age']);
+
+Note that for either L</"LIST CONTEXT"> or L</"HASH CONTEXT">, it is possible to use '*' to decrypt all columns:
+
+    my ($name, $height) = $db->raw("SELECT name, height FROM people WHERE id=1", decrypt => '*');
 
 =head1 SUBROUTINES/METHODS
 
 =head2 raw
 
-$db->raw([]);
-$db->raw(query=>);
-decrypt * 
-encrypt *
+L</raw> is a very versitile subroutine, and it can be called in three contexts. L</raw> should only be used to make a query that
+returns values for one record, or a query that returns no results (such as an UPDATE or INSERT query). If you need to have multiple
+results returned, see one of the subroutines below.
+
+=head3 SCALAR CONTEXT
+
+L</raw> can be called in a scalar context to only return one value, or in a undef context to return no value. Below are some examples.
+
+    #select
+    my $name = $db->raw("SELECT name FROM people WHERE id=1");
+
+    #update
+    $db->raw("UPDATE people SET name=? WHERE id=1", 'Frank');
+
+    #insert
+    $db->raw("INSERT INTO people (name, age) VALUES ('Jenny', 34)");
+
+Note that to L</decrypt> for L</"SCALAR CONTEXT"> for L</raw>, you would use L</"DECRYPT LIST CONTEXT">.
+
+=head3 LIST CONTEXT
+
+L</raw> can also be called in a list context to return multiple columns for one row.
+
+    my ($name, $age) = $db->raw("SELECT name, age FROM people WHERE id=1");
+
+    #or
+    my @person = $db->raw("SELECT name, age FROM people WHERE id=1");
+
+Note that to L</decrypt> for L</"LIST CONTEXT"> for L</raw>, you would use L</"DECRYPT LIST CONTEXT">.
+
+=head3 HASH CONTEXT
+
+L</raw> will return a hash if you are selecting more than one column for a single record.
+
+    my $person = $db->raw("SELECT name, age FROM people WHERE id=1");
+    my $name = $person->{name};
+    my $age = $person->{age};
+
+Note that L</raw>'s L</"HASH CONTEXT"> works when using * in your query.
+
+    my $person = $db->raw("SELECT * FROM people WHERE id=1");
+    my $name = $person->{name};
+    my $age = $person->{age};
+
+Note that to L</decrypt> for L</"HASH CONTEXT"> for L</raw>, you would use L</"DECRYPT HASH CONTEXT">.
 =cut
 
 sub raw {
@@ -186,6 +440,15 @@ sub raw {
 
 =head2 aoh (array_of_hashes)
 
+L</aoh> can be used to select multiple rows from the database. It returns an array reference of hashes, where each row is a hash in the array.
+
+    my $people = $db->aoh("SELECT * FROM people");
+
+    for my $person (@$people) { 
+        print "$person->{name} is $person->{age} years old\n";
+    }
+
+Note that to L</decrypt> for L</aoh>, you would use L</"DECRYPT HASH CONTEXT">.
 =cut
 
 sub aoh {
@@ -213,7 +476,52 @@ sub aoh {
 
 =head2 hoh (hash_of_hashes)
 
-#pass in href and add to it
+=over
+
+=item 
+
+B<query (required)> - the query
+
+=item 
+
+B<key (required)> - the name of the column that will serve as the key to access each row
+
+=item 
+
+B<href (optional)> - the hash reference that you would like to have the results added to
+
+=back
+
+L</hoh> can be used when you want to be able to access an individual row behind a unique key, where each row is represented as a hash. For instance,
+this subroutine can be useful if you would like to be able to access rows by their id in the database. L</hoh> returns a hash reference of hash references.
+
+    my $people = $db->hoh(query => "SELECT id, name, age FROM people", key => "id");
+
+    for my $key(keys %$people) { 
+        my $person = $people->{$key};
+        print "$person->{name} is $person->{age} years old\n";
+    }
+
+    #or
+    while(my ($key, $person) = each %$people) { 
+        print "$person->{name} is $person->{age} years old\n";
+    }
+
+So if you wanted to access the person with an id of 1, you could do so like this:
+
+    my $person1 = $people->{1};
+    my $person1_name = $person1->{name};
+    my $person1_age = $person1->{age};
+
+Also, with L</hoh> it is possible to add to a previous hash of hashes that you alread have by passing it in with the C<href> key:
+
+    #$people was previously retrieved, and results will now be added to $people
+    $db->hoh(query => "SELECT id, name, age FROM people", key => "id", href => $people);
+
+Note that you must select whatever column you want to be the key. So if you want to use "id" as the key, then you must select id in your query.
+Also, keys must be unique or the records will overwrite one another. To retrieve multiple records and access them by the same key, see L<"hoaoh (hash_of_array_of_hashes)"/hoaoh>.
+To L</decrypt> for L</hoh>, you would use L</"DECRYPT HASH CONTEXT">.
+
 =cut
 
 sub hoh {
@@ -221,7 +529,7 @@ sub hoh {
 	my $params = $self->_params(@_);
 	my ($href);
 
-	my $hoh = $params->{href}; #if hashref is passed it, it will just add to it
+	my $hoh = $params->{href}; #if hashref is passed in, it will just add to it
 
 	$self->_query($params);
 
@@ -243,6 +551,45 @@ sub hoh {
 
 =head2 hoa (hash_of_arrays)
 
+=over
+
+=item 
+
+B<query (required)> - the query
+
+=item 
+
+B<key (required)> - the name of the column that will serve as the key to store the values behind
+
+=item 
+
+B<val (required)> - the name of the column whose values you want to be stored behind key
+
+=item 
+
+B<href (optional)> - the hash reference that you would like to have the results added to
+
+=back
+
+L</hoa> is useful when you want to store a list of values for one column behind a key. For instance,
+say that you wanted the id's of all people who have the same name grouped together. You could perform that query like so:
+
+    my $hoa = $db->hoa(query => "SELECT id, name FROM people", key => "name", val => "id");
+
+    for my $name (%$hoa) { 
+        my $ids = $hoa->{$name};
+
+        print "$name has ids ";
+        for my $id (@$ids) { 
+            print " $id,";
+        }
+
+        print "\n";
+    }
+
+Note that you must select whatever column you want to be the key. So if you want to use "name" as the key, then you must select name in your query.
+To L</decrypt> for L</hoa>, you would use L</"DECRYPT LIST CONTEXT">.
+
 =cut
 
 sub hoa {
@@ -250,7 +597,9 @@ sub hoa {
 	my $params = $self->_params(@_);
 	my ($href);
 
-	my $hash = $params->{href}; #if hash is passed it, it will just add to it
+	croak "query, key, and val are required for hoa" unless $params->{query} and $params->{key} and $params->{val};
+
+	my $hash = $params->{href}; #if hash is passed in, it will just add to it
 
 	$self->_query($params);
 
@@ -272,12 +621,56 @@ sub hoa {
 
 =head2 hoaoh (hash_of_array_of_hashes)
 
+=over
+
+=item 
+
+B<query (required)> - the query
+
+=item 
+
+B<key (required)> - the name of the column that will serve as the key to store the array of hashes behind
+
+=item 
+
+B<href (optional)> - the hash reference that you would like to have the results added to
+
+=back
+
+L</hoaoh> can be used when you want to store multiple rows behind a key that they all have in common. For
+example, say that we wanted to have access to all rows for people that have the same name. That could be
+done like so:
+
+    my $hoaoh = $db->hoaoh(query => "SELECT id, name, age FROM people", key => "name");
+
+    for my $name (keys %$hoaoh) { 
+        my $people = $hoaoh->{$name};
+
+        print "People named $name: ";
+        for my $person (@$people) { 
+            print "  $person->{name} is $person->{age} years old\n";
+        }
+
+        print "\n";
+    }
+
+So to get the array of rows for all people named Fred, we could simply do:
+
+    my @freds = $hoaoh->{Fred};
+
+    for my $fred (@freds) { ... }
+
+Note that you must select whatever column you want to be the key. So if you want to use "name" as the key, then you must select name in your query.
+To L</decrypt> for L</hoaoh>, you would use L</"DECRYPT HASH CONTEXT">.
+
 =cut
 
 sub hoaoh {
 	my $self = shift;
 	my $params = $self->_params(@_);
 	my ($href);
+
+	croak "query and key are required for hoaoh" unless $params->{query} and $params->{key};
 
 	my $hoa = $params->{href}; #if hashref is passed it, it will just add to it
 
@@ -300,6 +693,18 @@ sub hoaoh {
 }
 
 =head2 array
+
+L</array> can be used for selecting one value from multiple rows. Say for instance that we wanted all the ids for anyone named Susie.
+We could do that like so:
+
+    my $ids = $db->array("SELECT id FROM people WHERE name='Susie'");
+
+    print "Susie ids: \n";
+    for my $id (@$ids) { 
+        print "$id\n";
+    }
+
+To L</decrypt> for L</array>, you would use L</"DECRYPT LIST CONTEXT">.
 
 =cut
 
@@ -327,6 +732,43 @@ sub array {
 
 =head2 hash
 
+=over
+
+=item 
+
+B<query (required)> - the query
+
+=item 
+
+B<key (required)> - the name of the column that will serve as the key 
+
+=item 
+
+B<val (required)> - the name of the column that will be stored behind the key
+
+=item 
+
+B<href (optional)> - the hash reference that you would like to have the results added to
+
+=back
+
+L</hash> can be used if you want to map one key to one value for multiple rows. For instance, let's say
+we wanted to map each person's id to their name:
+
+    my $ids_to_names = $db->hash(query => "SELECT id, name FROM people", key => "id", val => "name");
+
+    my $name_1 = $ids_to_names->{1};
+
+    print "$name_1\n"; #prints 'Fred'
+
+
+To have L</hash> add to an existing hash, just pass in the existing hash with C<href>:
+
+
+    $db->hash(query => "SELECT id, name FROM people", key => "id", val => "name", href => $ids_to_names);
+
+To L</decrypt> for L</hash>, you would use L</"DECRYPT HASH CONTEXT">.
+
 =cut
 
 sub hash {
@@ -334,7 +776,9 @@ sub hash {
 	my $params = $self->_params(@_);
 	my ($href);
 
-	my $hash = $params->{href}; #if hash is passed it, it will just add to it
+	croak "query, key, and val are required for hash" unless $params->{query} and $params->{key} and $params->{val};
+
+	my $hash = $params->{href}; #if hash is passed in, it will just add to it
 
 	$self->_query($params);
 
@@ -354,20 +798,116 @@ sub hash {
 	return $hash;
 }
 
-=head2 hash_update
+=head2 update
+
+=over
+
+=item 
+
+B<href (required)> - the hash reference that will be used to update the row, with the columns as the keys and the new values as the values
+
+=item 
+
+B<table (required)> - the name of the table that the updated row is in
+
+=item 
+
+B<id (optional)> - specifies the id of the item that we are updating (note, column must be called "id"). Should not be used if C<pk> is used
+
+=item 
+
+B<pk (optional)> - A hash reference of the form C<{name =E<gt> 'column_name', val =E<gt> 'unique_val'}>. Can be used instead of C<id>. Should not be used if C<id> is used
+
+=item 
+
+B<where (optional)> - A where clause to help decide what row to update. Any bind values can be passed in with C<vals>
+
+=back
+
+L</update> can be used to update a single row with a hash. This can be useful if you already have the values you need
+to update the row with in a hash, where the keys are the column names and the values are the new values. This function
+might be useful for submitting forms easily.
+
+    my %updated_person = ( 
+        name => 'Billy',
+        age => '32',
+        favorite_color => 'blue',
+    );
+
+    $db->update(href => \%updated_person, table => 'people', id => 1);
+
+Note that above for "id", the column must actually be named id for it to work. If you have a primary key or unique
+identifying column that is named something different than id, then you can use the C<pk> parameter:
+
+    $db->update(href => \%updated_person, table => 'people', pk => {name => 'person_id', val => 1});
+
+If you need to specify more constraints for the row that you are updating instead of just the id, you can pass in a where clause:
+
+    $db->update(href => \%updated_person, table => 'people', where => 'name=? AND favorite_color=? AND age=?', vals => ['Joe', 'green', 61]);
+    
+Note that any bind values used in a where clause can just be passed into the C<vals> as usual. It is possible to use a where clause and an id or pk together:
+
+    $db->update(href => \%updated_person, table => 'people', where => 'name=? AND favorite_color=? AND age=?', vals => ['Joe', 'green', 61], id => 1);
+
+Alternatively, you could just put the C<id> or C<pk> in your where clause.
+
+If you need to have literal SQL into your update query, then you just need to pass in a scalar reference. For example:
+
+    "UPDATE people SET name='Billy', update_time=NOW() WHERE id=1"
+
+If we had this:
+
+    my %updated_person = (
+        name => 'Billy',
+        update_time => 'NOW()',
+    );
+
+    $db->update(href => \%updated_person, table => 'people', id => 1);
+
+This would effectively evaluate to:
+
+    $db->raw(query => "UPDATE people SET name=?, update_time=? WHERE id=?", vals => ['Billy', 'NOW()', 1]);
+
+However, this will not work. Instead, we need to do:
+
+    my %updated_person = (
+        name => 'Billy',
+        update_time => \'NOW()',
+    );
+
+    $db->update(href => \%updated_person, table => 'people', id => 1);
+
+Which evaluates to:
+
+    $db->raw(query => "UPDATE people SET name=?, update_time=NOW() WHERE id=?", vals => ['Billy', 1]);
+
+And this is what we want.
+
+=head3 update encrypt
+
+When encrypting for update, because a hash is passed in you need to have the encrypt array reference contain the names of the columns that you want to encrypt 
+instead of the indices for the order in which the columns are listed:
+
+    my %updated_person = ( 
+        name => 'Billy',
+        age => '32',
+        favorite_color => 'blue',
+    );
+
+    $db->update(href => \%updated_person, table => 'people', id => 1, encrypt => ['name', 'favorite_color']);
+
+Note we do not ecnrypt age because it is most likely stored as an integer in the database.
 
 =cut
-#update without using taint mode?
-#encrypt for hash_update?
-sub hash_update {
+
+sub update {
 	my $self = shift;
 	my $params = $self->_params(@_);
 
-	die "table must be provided for hash_update" unless $params->{table};
+	croak "href and table are required for update" unless $params->{href} and $params->{table};
 
 	my @vals;
 	my $string = '';
-	#JUST HAVE ENCRYPTAFTER WARDS BY CALLING sub _crypt_encrypt??? then will change vals
 	while(my ($key,$val) = each %{$params->{href}}) { 
 		my $append = '?';
 		if (ref $val eq 'SCALAR') {
@@ -388,12 +928,7 @@ sub hash_update {
 		$where = " WHERE $params->{where}";	
 		push @vals, @{$params->{vals}};
 	}
-	#PUT IN DOCUMENTATION id, and PK
-	#Must be EITHER OR, not both!
-	#test no id
-	#test id
-	#test id with other where vals
-	#test SCALAR like \'Now()'
+
 	if($params->{id}) { 
 		if($where eq '') { 
 			$where = " WHERE id=? ";	
@@ -425,6 +960,29 @@ sub hash_update {
 	$self->_query($params);
 } 
 
+=head2 sth
+
+L</sth> returns the statement handle from the previous query.
+
+    my $sth = $db->sth;
+
+This can be useful if you need a statement handle to perform a function, like to get
+the id of the last inserted row.
+
+=cut
+
+=head2 dbh
+
+L</dbh> returns the database handle that L<DBIx::Raw> is using.
+
+    my $dbh = $db->dbh;
+
+L</dbh> can also be used to set a new database handle for L<DBIx::Raw> to use.
+
+    $db->dbh($new_dbh);
+
+=cut
+
 sub _params { 
 	my $self = shift;
 
@@ -455,7 +1013,7 @@ sub _query {
 
 sub _perish { 
 	my ($self, $params) = @_;
-	die "ERROR: Can't prepare query.\n\n$DBI::errstr\n\nquery='" . $params->{query} . "'\n";
+	croak "ERROR: Can't prepare query.\n\n$DBI::errstr\n\nquery='" . $params->{query} . "'\n";
 }
 
 sub _crypt_decrypt { 
@@ -562,6 +1120,7 @@ L<http://search.cpan.org/dist/DBIx-Raw/>
 
 =head1 ACKNOWLEDGEMENTS
 
+Special thanks to Jay Davis who wrote a lot of the original code that this module is based on.
 
 =head1 LICENSE AND COPYRIGHT
 

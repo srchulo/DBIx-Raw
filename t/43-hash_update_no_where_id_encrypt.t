@@ -19,7 +19,7 @@ my %update = (
 my $people = people_hash();
 my $p2 = $people->[1];
 
-$db->hash_update(href=>\%update, table => 'dbix_raw', id => 1, encrypt => '*');
+$db->update(href=>\%update, table => 'dbix_raw', id => 1, encrypt => '*');
 
 my $person = $db->raw(query=>"SELECT name, age, favorite_color FROM dbix_raw where id=1", decrypt =>['name','age','favorite_color']);
 my $person2 = $db->raw(query=>"SELECT name, age, favorite_color FROM dbix_raw where id=2");

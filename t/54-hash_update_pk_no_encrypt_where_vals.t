@@ -19,7 +19,7 @@ my %update = (
 my $people = people_hash();
 my $p2 = $people->[1];
 
-$db->hash_update(href=>\%update, table => 'dbix_raw', where => "name=?", vals => ['Adam'], pk => {name => 'id', val => 1});
+$db->update(href=>\%update, table => 'dbix_raw', where => "name=?", vals => ['Adam'], pk => {name => 'id', val => 1});
 
 my $person = $db->raw("SELECT name, age, favorite_color FROM dbix_raw where id=1");
 my $person2 = $db->raw("SELECT name, age, favorite_color FROM dbix_raw where id=2");

@@ -12,7 +12,7 @@ plan tests => 5;
 use_ok( 'DBIx::Raw' ) || print "Bail out!\n";
 
 my $db;
-my $abs_path = abs_path('t/dbix_conf.pl');
+my $abs_path = abs_path('t/dbix_conf.yaml');
 isa_ok($db = DBIx::Raw->new(conf => $abs_path), 'DBIx::Raw');
 
 is($db->dsn, dsn());
