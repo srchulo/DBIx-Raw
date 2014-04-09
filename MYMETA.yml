@@ -3,7 +3,7 @@ abstract: 'Maintain control of SQL queries while still having a layer of abstrac
 author:
   - 'Adam Hopkins <srchulo@cpan.org>'
 build_requires:
-  CWD: 0
+  Cwd: 0
   DBD::SQLite: 0
   Test::Carp: 0
   Test::More: 0
@@ -23,10 +23,11 @@ no_index:
 requires:
   Carp: 0
   Config::Any: 0
+  Crypt::Blowfish: 0
   Crypt::CBC: 0
   DBI: 0
   Digest::MD5: 0
   MIME::Base64: 0
   Mouse: 0
   perl: 5.006
-version: 0.03
+version: 0.04

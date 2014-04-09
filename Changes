@@ -1,5 +1,8 @@
 Revision history for DBIx-Raw
 
+0.04    April 8, 9:30 PM
+        Fixed required modules
+
 0.03    March 31, 08:56 AM
         Updated MANIFEST
 

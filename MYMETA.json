@@ -22,7 +22,7 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "CWD" : "0",
+            "Cwd" : "0",
             "DBD::SQLite" : "0",
             "Test::Carp" : "0",
             "Test::More" : "0"
@@ -37,6 +37,7 @@
          "requires" : {
             "Carp" : "0",
             "Config::Any" : "0",
+            "Crypt::Blowfish" : "0",
             "Crypt::CBC" : "0",
             "DBI" : "0",
             "Digest::MD5" : "0",
@@ -47,5 +48,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.03"
+   "version" : "0.04"
 }
