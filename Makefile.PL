@@ -18,6 +18,7 @@ WriteMakefile(
         'Test::More' => 0,
         'Test::Carp' => 0,
         'DBD::SQLite' => 0,
+        'YAML::XS' => 0,
         'Cwd' => 0,
     },
     PREREQ_PM => {

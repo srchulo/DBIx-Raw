@@ -1,5 +1,8 @@
 Revision history for DBIx-Raw
 
+0.05    April 11, 8:45 AM
+        Added YAML::XS to required modules for test
+
 0.04    April 8, 9:30 PM
         Fixed required modules
 

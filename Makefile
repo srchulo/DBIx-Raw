@@ -13,13 +13,13 @@
 
 #     ABSTRACT_FROM => q[lib/DBIx/Raw.pm]
 #     AUTHOR => [q[Adam Hopkins <srchulo@cpan.org>]]
-#     BUILD_REQUIRES => { Test::More=>q[0], DBD::SQLite=>q[0], Test::Carp=>q[0], Cwd=>q[0] }
+#     BUILD_REQUIRES => { Test::More=>q[0], DBD::SQLite=>q[0], Test::Carp=>q[0], YAML::XS=>q[0], Cwd=>q[0] }
 #     CONFIGURE_REQUIRES => { ExtUtils::MakeMaker=>q[0] }
 #     LICENSE => q[Artistic_2_0]
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[DBIx::Raw]
 #     PL_FILES => {  }
-#     PREREQ_PM => { DBD::SQLite=>q[0], Crypt::Blowfish=>q[0], Test::Carp=>q[0], Carp=>q[0], Test::More=>q[0], Crypt::CBC=>q[0], Mouse=>q[0], MIME::Base64=>q[0], Digest::MD5=>q[0], Config::Any=>q[0], Cwd=>q[0], DBI=>q[0] }
+#     PREREQ_PM => { DBD::SQLite=>q[0], Crypt::Blowfish=>q[0], Test::Carp=>q[0], YAML::XS=>q[0], Carp=>q[0], Test::More=>q[0], Crypt::CBC=>q[0], Mouse=>q[0], MIME::Base64=>q[0], Digest::MD5=>q[0], Config::Any=>q[0], Cwd=>q[0], DBI=>q[0] }
 #     VERSION_FROM => q[lib/DBIx/Raw.pm]
 #     clean => { FILES=>q[DBIx-Raw-*] }
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
@@ -61,11 +61,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = DBIx::Raw
 NAME_SYM = DBIx_Raw
-VERSION = 0.04
+VERSION = 0.05
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_04
+VERSION_SYM = 0_05
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.04
+XS_VERSION = 0.05
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -262,7 +262,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = DBIx-Raw
-DISTVNAME = DBIx-Raw-0.04
+DISTVNAME = DBIx-Raw-0.05
 
 
 # --- MakeMaker macro section:
@@ -491,6 +491,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  DBD::SQLite: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Test::Carp: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Test::More: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  YAML::XS: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'dynamic_config: 1' >> META_new.yml
@@ -514,7 +515,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  MIME::Base64: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mouse: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: 5.006' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: 0.04' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: 0.05' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
@@ -544,7 +545,8 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '            "Cwd" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBD::SQLite" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Test::Carp" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Test::More" : "0"' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Test::More" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "YAML::XS" : "0"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
 	$(NOECHO) $(ECHO) '      "configure" : {' >> META_new.json
@@ -567,7 +569,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.04"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.05"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 

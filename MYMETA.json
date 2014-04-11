@@ -25,7 +25,8 @@
             "Cwd" : "0",
             "DBD::SQLite" : "0",
             "Test::Carp" : "0",
-            "Test::More" : "0"
+            "Test::More" : "0",
+            "YAML::XS" : "0"
          }
       },
       "configure" : {
@@ -48,5 +49,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.04"
+   "version" : "0.05"
 }
