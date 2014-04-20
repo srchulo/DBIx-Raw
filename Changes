@@ -1,5 +1,8 @@
 Revision history for DBIx-Raw
 
+0.06    April 20, 3:05 PM
+        Added code to handle undef cases
+
 0.05    April 11, 8:45 AM
         Added YAML::XS to required modules for test
 

@@ -82,11 +82,11 @@ DBIx::Raw - Maintain control of SQL queries while still having a layer of abstra
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 SYNOPSIS
 
@@ -409,7 +409,7 @@ sub raw {
 	elsif(($params->{query} =~ /SELECT /sig) || ($params->{query} =~ /SHOW /sig)) {
   		unless($params->{query} =~ /INSERT INTO (.*?)SELECT /sig) {
   			if($return_type eq 'hash') {
-				$params->{href} = $self->sth->fetchrow_hashref;
+				return unless $params->{href} = $self->sth->fetchrow_hashref; #handles undef case
 
 				if($params->{decrypt}) {
 					$self->_crypt_decrypt($params);
@@ -418,7 +418,7 @@ sub raw {
   				push @return_values, $params->{href};
 			}
 			else {
-				@return_values = $self->sth->fetchrow_array() or $self->_perish($params);
+				return unless @return_values = $self->sth->fetchrow_array(); #handles undef cases
 
 				if($params->{decrypt}) {
 					$params->{return_values} = \@return_values;
