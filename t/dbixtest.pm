@@ -5,8 +5,8 @@ use Exporter;
 
 our @ISA= qw( Exporter );
 
-our @EXPORT_OK = qw( dns user password create_table load_db get_db people crypt_salt prepare people_hash decrypt_arr);
-our @EXPORT = qw( dsn user password create_table load_db get_db people crypt_salt prepare people_hash decrypt_arr);
+our @EXPORT_OK = qw( dns user password create_table load_db get_db people crypt_salt prepare people_hash decrypt_arr get_conf);
+our @EXPORT = qw( dsn user password create_table load_db get_db people crypt_salt prepare people_hash decrypt_arr get_conf);
 
 sub dsn { 'dbi:SQLite:dbname=:memory:' }
 
@@ -74,9 +74,13 @@ sub prepare {
 }
 
 sub get_db { 
+	return DBIx::Raw->new(conf => get_conf());
+}
+
+sub get_conf { 
+	use strict;
 	use Cwd 'abs_path';
-	my $abs_path = abs_path('t/dbix_conf.pl');
-	return DBIx::Raw->new(conf => $abs_path);
+	return abs_path('t/dbix_conf.pl');
 }
 
 1;
