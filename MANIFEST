@@ -66,6 +66,12 @@ t/57-hoh_href.t
 t/58-hoa_href.t
 t/59-hoaoh_href.t
 t/60-hash_href.t
+t/61-raw_simple_syntax_undef.t
+t/62-raw_simple_syntax_undef_list.t
+t/63-raw_simple_syntax_undef_hash.t
+t/64-reconnect-dsn-user-password.t
+t/65-reconnect-conf.t
+t/66-reconnect.t
 t/boilerplate.t
 t/dbix_conf.pl
 t/dbix_conf.yaml

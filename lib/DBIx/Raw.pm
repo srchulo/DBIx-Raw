@@ -10,7 +10,8 @@ use Carp;
 has 'dsn'    => ( is => 'rw', isa => 'Any', default => undef);
 has 'user'    => ( is => 'rw', isa => 'Any', default => undef);
 has 'password'    => ( is => 'rw', isa => 'Any', default => undef);
-has 'conf'    => ( is => 'ro', isa => 'Any', default => undef);
+has 'conf'    => ( is => 'rw', isa => 'Any', default => undef);
+has 'prev_conf'    => ( is => 'rw', isa => 'Str', default => '');
 has 'crypt_key'    => ( is => 'rw', isa => 'Str', default => '6883868834006296591264051568595813693328016796531185824375212916576042669669556288781800326542091901603033335703884439231366552922364658270813734165084102xfasdfa8823423sfasdfalkj!@#$$CCCFFF!09xxxxlai3847lol13234408!!@#$_+-083dxje380-=0');
 
 has 'crypt'    => ( 
@@ -30,13 +31,8 @@ has 'dbh'    => (
 	is => 'rw', 
 	isa => 'Any', 
 	lazy => 1, 
-	default => sub { 
-		my ($self) = @_;
-		my $dbh = DBI->connect($self->dsn, $self->user, $self->password) or croak($DBI::errstr);
-		return $dbh;
-});
-
-#ALLOW DBH TO BE PASSED IN
+	default => sub { shift->connect }
+);
 
 has 'keys' => (
 	is => 'ro', 
@@ -56,24 +52,8 @@ has 'keys' => (
 
 sub BUILD {
 	my ($self) = @_;
-
-	#load in configuration if it exists
-	if($self->conf) { 
-		my $config = Config::Any->load_files({files =>[$self->conf],use_ext => 1  }); 
-
-		for my $c (@$config){
-  			for my $file (keys %$c){
-     			for my $attribute (keys %{$c->{$file}}){
-					if($self->can($attribute)) { 
-						$self->$attribute($c->{$file}->{$attribute});
-					}
-   				}
-  			}
-		}
-	}
-
-	croak "Need to specify 'dsn', 'user', and 'password' either when you create the object or by passing in a configuration file in 'conf'! Or, pass in an existing dbh" 
-		unless (defined $self->dsn and defined $self->user and defined $self->password) or defined $self->dbh;
+	$self->_parse_conf;
+	$self->_validate_connect_info;
 }
 
 =head1 NAME
@@ -82,11 +62,11 @@ DBIx::Raw - Maintain control of SQL queries while still having a layer of abstra
 
 =head1 VERSION
 
-Version 0.06
+Version 0.09
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.09';
 
 =head1 SYNOPSIS
 
@@ -983,6 +963,96 @@ L</dbh> can also be used to set a new database handle for L<DBIx::Raw> to use.
 
 =cut
 
+=head2 dsn
+
+L</dsn> returns the dsn that was provided.
+
+    my $dsn = $db->dsn;
+
+L</dsn> can also be used to set a new C<dsn>.
+
+    $db->dsn($new_dsn);
+
+When setting a new C<dsn>, it's likely you'll want to use L</connect>.
+
+=cut
+
+=head2 user
+
+L</user> returns the user that was provided.
+
+    my $user = $db->user;
+
+L</user> can also be used to set a new C<user>.
+
+    $db->user($new_user);
+
+When setting a new C<user>, it's likely you'll want to use L</connect>.
+
+=cut
+
+=head2 password
+
+L</password> returns the password that was provided.
+
+    my $password = $db->password;
+
+L</password> can also be used to set a new C<password>.
+
+    $db->password($new_password);
+
+When setting a new C<password>, it's likely you'll want to use L</connect>.
+
+=cut
+
+=head2 conf
+
+L</conf> returns the conf file that was provided.
+
+    my $conf = $db->conf;
+
+L</conf> can also be used to set a new C<conf> file.
+
+    $db->conf($new_conf);
+
+When setting a new C<conf>, it's likely you'll want to use L</connect>.
+
+=cut
+
+=head2 connect
+
+L</connect> can be used to keep the same L<DBIx::Raw> object, but get a new L</dbh>. You can call connect to get a new dbh with the same settings that you have provided:
+
+    #now there is a new dbh with the same DBIx::Raw object using the same settings
+    $db->connect;
+
+Or you can change the connect info. 
+For example, if you update C<dsn>, C<user>, C<password>:
+
+    $db->dsn('new_dsn');
+    $db->user('user');
+    $db->password('password');
+
+    #get new dbh but keep same DBIx::Raw object
+    $db->connect;
+
+Or if you update the conf file:
+
+    $db->conf('/path/to/new_conf.pl');
+    
+    #get new dbh but keep same DBIx::Raw object
+    $db->connect;
+
+=cut
+
+sub connect { 
+	my ($self) = @_;
+
+	$self->_parse_conf;
+	$self->_validate_connect_info;
+	return $self->dbh(DBI->connect($self->dsn, $self->user, $self->password) or croak($DBI::errstr));
+}
+
 sub _params { 
 	my $self = shift;
 
@@ -1073,6 +1143,37 @@ sub _encrypt {
 sub _decrypt { 
 	my ($self, $text) = @_;
 	return $self->crypt->decrypt($text); 
+}
+
+sub _parse_conf { 
+	my ($self) = @_;
+
+	#load in configuration if it exists
+	if($self->conf) { 
+
+		#no need to read in settings again if conf hasn't changed, unless dsn, user, or password is unset
+		return if $self->conf eq $self->prev_conf and $self->dsn and $self->user and $self->password;
+
+		my $config = Config::Any->load_files({files =>[$self->conf],use_ext => 1  }); 
+
+		for my $c (@$config){
+  			for my $file (keys %$c){
+     			for my $attribute (keys %{$c->{$file}}){
+					if($self->can($attribute)) { 
+						$self->$attribute($c->{$file}->{$attribute});
+					}
+   				}
+  			}
+		}
+
+		$self->prev_conf($self->conf);
+	}
+}
+
+sub _validate_connect_info { 
+	my ($self) = @_;
+	croak "Need to specify 'dsn', 'user', and 'password' either when you create the object or by passing in a configuration file in 'conf'! Or, pass in an existing dbh" 
+		unless (defined $self->dsn and defined $self->user and defined $self->password) or defined $self->dbh;
 }
 
 =head1 AUTHOR
