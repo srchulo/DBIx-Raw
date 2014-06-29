@@ -1,5 +1,8 @@
 Revision history for DBIx-Raw
 
+0.10    June 28, 11:00 PM Seattle, WA 
+        Added crypt_key to documentation and added aoa
+
 0.09    May 17, 7:20 PM Seattle, WA 
         Added prev_conf so we don't reread in conf if it has not changed
 

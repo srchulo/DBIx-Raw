@@ -62,11 +62,11 @@ DBIx::Raw - Maintain control of SQL queries while still having a layer of abstra
 
 =head1 VERSION
 
-Version 0.09
+Version 0.10
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 SYNOPSIS
 
@@ -297,6 +297,16 @@ Note that for either L</"LIST CONTEXT"> or L</"HASH CONTEXT">, it is possible to
 
     my ($name, $height) = $db->raw("SELECT name, height FROM people WHERE id=1", decrypt => '*');
 
+=head2 crypt_key
+
+L<DBIx::Raw> uses L</"crypt_key"> to encrypt and decrypt all values. You can set the crypt key when you create your
+L<DBIx::Raw> object by passing it into L</new>, providing it to L<CONFIGURATION FILE|DBIx::Raw/"CONFIGURATION FILE">,
+or by setting it with its setter method:
+
+    $db->crypt_key("1234");
+
+It is strongly recommended that you do not use the default L</"crypt_key">.
+
 =head1 SUBROUTINES/METHODS
 
 =head2 raw
@@ -453,6 +463,46 @@ sub aoh {
 
 	return \@a;
 }
+
+=head2 aoa (array_of_arrays)
+
+L</aoa> can be used to select multiple rows from the database. It returns an array reference of array references, where each row is an array within the array.
+
+    my $people = $db->aoa("SELECT name,age FROM people");
+
+    for my $person (@$people) { 
+		my $name = $person->[0];
+		my $age = $person->[1];
+        print "$person->{name} is $person->{age} years old\n";
+    }
+
+Note that to L</decrypt> for L</aoa>, you would use L</"DECRYPT LIST CONTEXT">.
+=cut
+
+sub aoa {
+	my $self = shift;
+	my $params = $self->_params(@_);
+	my (@return_values);
+
+	$self->_query($params);
+
+	if($params->{decrypt}) {
+		while(my @a=$self->sth->fetchrow_array){
+			$params->{return_values} = \@a;
+			$self->_crypt_decrypt($params);
+  			push @return_values, \@a;
+		}
+	}
+	else { 
+		while(my @a=$self->sth->fetchrow_array){
+  			push @return_values, \@a;
+		}
+	}
+
+	return \@return_values;
+}
+
+
 
 =head2 hoh (hash_of_hashes)
 
