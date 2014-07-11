@@ -74,6 +74,7 @@ t/65-reconnect-conf.t
 t/66-reconnect.t
 t/67-aoa_no_decrypt.t
 t/68-aoa_decrypt.t
+t/69-insert_multiple_no_encrypt.t
 t/boilerplate.t
 t/dbix_conf.pl
 t/dbix_conf.yaml

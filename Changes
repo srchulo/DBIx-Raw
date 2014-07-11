@@ -1,5 +1,8 @@
 Revision history for DBIx-Raw
 
+0.11    July 10, 9:00 PM Seattle, WA 
+        Added insert_multiple, and fixed aoa documentation
+
 0.10    June 28, 11:00 PM Seattle, WA 
         Added crypt_key to documentation and added aoa
 

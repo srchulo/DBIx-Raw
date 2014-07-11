@@ -47,6 +47,7 @@ has 'keys' => (
 		table => 1,
 		where => 1,
 		pk => 1,
+		rows => 1,
 	} },
 );
 
@@ -62,11 +63,11 @@ DBIx::Raw - Maintain control of SQL queries while still having a layer of abstra
 
 =head1 VERSION
 
-Version 0.10
+Version 0.11
 
 =cut
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 =head1 SYNOPSIS
 
@@ -471,9 +472,9 @@ L</aoa> can be used to select multiple rows from the database. It returns an arr
     my $people = $db->aoa("SELECT name,age FROM people");
 
     for my $person (@$people) { 
-		my $name = $person->[0];
-		my $age = $person->[1];
-        print "$person->{name} is $person->{age} years old\n";
+        my $name = $person->[0];
+        my $age = $person->[1];
+        print "$name is $age years old\n";
     }
 
 Note that to L</decrypt> for L</aoa>, you would use L</"DECRYPT LIST CONTEXT">.
@@ -986,6 +987,85 @@ sub update {
 	$params->{vals} = \@vals;
 
 	$self->_crypt_encrypt($params) if $params->{encrypt};
+
+	$self->_query($params);
+} 
+
+=head2 insert_multiple
+
+=over
+
+=item 
+
+B<rows (required)> - the array reference of array references, where each inner array reference holds the values to be inserted for one row
+
+=item 
+
+B<table (required)> - the name of the table that the rows are to be inserted into
+
+=item 
+
+B<columns (required)> - The names of the columns that values are being inserted for
+
+=back
+
+L</insert_multiple> can be used to insert multiple rows with one query. For instance:
+
+    my $rows = [
+        [
+            1,
+            'Joe',
+            23,
+        ],
+        [
+            2,
+            'Ralph,
+            50,
+        ],
+    ];
+
+    $db->insert_multiple(table => 'people', columns => [qw/id name age/], rows => $rows);
+
+This can be translated into the SQL query:
+
+    INSERT INTO people (id, name, age) VALUES (1, 'Joe', 23), (2, 'Ralph', 50);
+
+Note that L</insert_multiple> does not yet support encrypt. I'm planning to add this feature later. If you need it now, please shoot me an email and I will
+try to speed things up!
+
+=cut
+
+sub insert_multiple {
+	my $self = shift;
+	my $params = $self->_params(@_);
+
+	while(my ($key, $val) = each %$params) { 
+		print "$key=$val\n";
+	}
+
+	croak "columns, table, and rows are required for insert_multiple" unless $params->{columns} and $params->{table} and $params->{rows};
+
+	my $values_string = '';
+	my @vals;
+
+	my $columns = join ',', @{$params->{columns}};
+	my $row_string = '?,' x @{$params->{columns}};
+	print "ROW STRING $row_string\n";
+	$row_string = substr $row_string, 0, -1;
+	print "ROW STRING $row_string\n";
+
+	for my $row (@{$params->{rows}}) { 
+		push @vals, @$row;
+		print "ROW @$row\n";
+		print "VALS @vals\n";
+		$values_string .= "($row_string),";		
+	}
+
+	$values_string = substr $values_string, 0, -1;
+
+	$params->{query} = "INSERT INTO $params->{table} ($columns) VALUES $values_string";
+	print $params->{query} . "\n";
+	$params->{vals} = \@vals;
 
 	$self->_query($params);
 } 
