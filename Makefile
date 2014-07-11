@@ -62,11 +62,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = DBIx::Raw
 NAME_SYM = DBIx_Raw
-VERSION = 0.11
+VERSION = 0.12
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_11
+VERSION_SYM = 0_12
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.11
+XS_VERSION = 0.12
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -262,7 +262,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = DBIx-Raw
-DISTVNAME = DBIx-Raw-0.11
+DISTVNAME = DBIx-Raw-0.12
 
 
 # --- MakeMaker macro section:
@@ -517,7 +517,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  MIME::Base64: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mouse: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.006'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.11'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.12'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
@@ -571,7 +571,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.11"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.12"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 

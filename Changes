@@ -1,5 +1,8 @@
 Revision history for DBIx-Raw
 
+0.12    July 10, 10:00 PM Seattle, WA 
+        removed prints
+
 0.11    July 10, 9:00 PM Seattle, WA 
         Added insert_multiple, and fixed aoa documentation
 

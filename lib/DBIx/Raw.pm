@@ -63,11 +63,11 @@ DBIx::Raw - Maintain control of SQL queries while still having a layer of abstra
 
 =head1 VERSION
 
-Version 0.11
+Version 0.12
 
 =cut
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 =head1 SYNOPSIS
 
@@ -1050,14 +1050,10 @@ sub insert_multiple {
 
 	my $columns = join ',', @{$params->{columns}};
 	my $row_string = '?,' x @{$params->{columns}};
-	print "ROW STRING $row_string\n";
 	$row_string = substr $row_string, 0, -1;
-	print "ROW STRING $row_string\n";
 
 	for my $row (@{$params->{rows}}) { 
 		push @vals, @$row;
-		print "ROW @$row\n";
-		print "VALS @vals\n";
 		$values_string .= "($row_string),";		
 	}
 
