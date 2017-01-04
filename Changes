@@ -1,5 +1,8 @@
 Revision history for DBIx-Raw
 
+0.13    July 10, 00:23 San Jose, CA
+        Fixed encrypt documentation. Added insert/insert encrypt method. Fixed update encrypt method. 
+
 0.12    July 10, 10:00 PM Seattle, WA 
         removed prints
 

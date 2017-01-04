@@ -5,6 +5,7 @@ use DBI;
 use Config::Any;
 use DBIx::Raw::Crypt;
 use Carp;
+use List::Util qw/first/;
 
 #have an errors file to write to
 has 'dsn'    => ( is => 'rw', isa => 'Any', default => undef);
@@ -48,6 +49,7 @@ has 'keys' => (
 		where => 1,
 		pk => 1,
 		rows => 1,
+        id => 1,
 	} },
 );
 
@@ -63,11 +65,11 @@ DBIx::Raw - Maintain control of SQL queries while still having a layer of abstra
 
 =head1 VERSION
 
-Version 0.12
+Version 0.13
 
 =cut
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 =head1 SYNOPSIS
 
@@ -284,7 +286,7 @@ order that the columns were listed in. For instance:
 
     my $name = $db->raw(query => "SELECT name FROM people WHERE id=1", decrypt => [0]);
 
-    my ($name, $age) = $db->raw("SELECT name, age FROM people WHERE id=1", decrypt => [0,1]);
+    my ($name, $age) = $db->raw(query => "SELECT name, age FROM people WHERE id=1", decrypt => [0,1]);
 
 =head3 DECRYPT HASH CONTEXT 
 
@@ -296,7 +298,7 @@ When your query has L<DBIx::Raw> return your values in a hash context, then the 
 
 Note that for either L</"LIST CONTEXT"> or L</"HASH CONTEXT">, it is possible to use '*' to decrypt all columns:
 
-    my ($name, $height) = $db->raw("SELECT name, height FROM people WHERE id=1", decrypt => '*');
+    my ($name, $height) = $db->raw(query => "SELECT name, height FROM people WHERE id=1", decrypt => '*');
 
 =head2 crypt_key
 
@@ -829,6 +831,124 @@ sub hash {
 	return $hash;
 }
 
+=head2 insert
+
+=over
+
+=item 
+
+B<href (required)> - the hash reference that will be used to insert the row, with the columns as the keys and the new values as the values
+
+=item 
+
+B<table (required)> - the name of the table that the row will be inserted into
+
+=back
+
+L</insert> can be used to insert a single row with a hash. This can be useful if you already have the values you need
+to insert the row with in a hash, where the keys are the column names and the values are the new values. This function
+might be useful for submitting forms easily.
+
+    my %person_to_insert = ( 
+        name => 'Billy',
+        age => '32',
+        favorite_color => 'blue',
+    );
+
+    $db->insert(href => \%person_to_insert, table => 'people');
+
+If you need to have literal SQL into your insert query, then you just need to pass in a scalar reference. For example:
+
+    "INSERT INTO people (name, update_time) VALUES('Billy', NOW())"
+
+If we had this:
+
+    my %person_to_insert = (
+        name => 'Billy',
+        update_time => 'NOW()',
+    );
+
+    $db->insert(href => \%person_to_insert, table => 'people');
+
+This would effectively evaluate to:
+
+    $db->raw(query => "INSERT INTO people (name, update_time) VALUES(?, ?)", vals => ['Billy', 'NOW()']);
+
+However, this will not work. Instead, we need to do:
+
+    my %person_to_insert = (
+        name => 'Billy',
+        update_time => \'NOW()',
+    );
+
+    $db->insert(href => \%person_to_insert, table => 'people');
+
+Which evaluates to:
+
+    $db->raw(query => "INSERT INTO people (name, update_time=NOW())", vals => ['Billy']);
+
+And this is what we want.
+
+=head3 insert encrypt
+
+When encrypting for insert, because a hash is passed in you need to have the encrypt array reference contain the names of the columns that you want to encrypt 
+instead of the indices for the order in which the columns are listed:
+
+    my %person_to_insert = ( 
+        name => 'Billy',
+        age => '32',
+        favorite_color => 'blue',
+    );
+
+    $db->insert(href => \%person_to_insert, table => 'people', encrypt => ['name', 'favorite_color']);
+
+Note we do not ecnrypt age because it is most likely stored as an integer in the database.
+
+=cut
+
+# TODO: write insert tests
+sub insert {
+	my $self = shift;
+	my $params = $self->_params(@_);
+
+	croak "href and table are required for insert" unless $params->{href} and $params->{table};
+
+	my @vals;
+	my $column_names = '';
+	my $values_string = '';
+    my @encrypt;
+	while(my ($key,$val) = each %{$params->{href}}) { 
+		my $append = '?';
+		if (ref $val eq 'SCALAR') {
+			$append = $$val;
+		}
+		else { 
+            if ($params->{encrypt} and first { $_ eq $key } @{$params->{encrypt}}) {
+                print "Adding $key as " . scalar(@vals). "\n";
+                push @encrypt, scalar(@vals);
+            }
+
+			push @vals, $val;
+		}
+
+        $column_names .= "$key,";
+        $values_string .= "$append,";
+	}
+	
+	$column_names = substr $column_names, 0, -1;
+	$values_string = substr $values_string, 0, -1;
+
+	$params->{query} = "INSERT INTO $params->{table} ($column_names) VALUES($values_string)";
+	$params->{vals} = \@vals;
+
+    if ($params->{encrypt} and @encrypt) {
+        $params->{encrypt} = \@encrypt;
+	    $self->_crypt_encrypt($params);
+    }
+
+	$self->_query($params);
+} 
+
 =head2 update
 
 =over
@@ -939,12 +1059,18 @@ sub update {
 
 	my @vals;
 	my $string = '';
+    my @encrypt;
 	while(my ($key,$val) = each %{$params->{href}}) { 
 		my $append = '?';
 		if (ref $val eq 'SCALAR') {
 			$append = $$val;
 		}
 		else { 
+            # TODO: write update encrypt tests
+            if ($params->{encrypt} and first { $_ eq $key } @{$params->{encrypt}}) {
+                push @encrypt, scalar(@vals);
+            }
+
 			push @vals, $val;
 		}
 
@@ -986,7 +1112,10 @@ sub update {
 	$params->{query} = "UPDATE $params->{table} SET $string $where";
 	$params->{vals} = \@vals;
 
-	$self->_crypt_encrypt($params) if $params->{encrypt};
+    if ($params->{encrypt} and @encrypt) {
+        $params->{encrypt} = \@encrypt;
+	    $self->_crypt_encrypt($params);
+    }
 
 	$self->_query($params);
 } 
