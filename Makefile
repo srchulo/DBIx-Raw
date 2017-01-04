@@ -19,7 +19,7 @@
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[DBIx::Raw]
 #     PL_FILES => {  }
-#     PREREQ_PM => { Carp=>q[0], Config::Any=>q[0], Crypt::Blowfish=>q[0], Crypt::CBC=>q[0], Cwd=>q[0], DBD::SQLite=>q[0], DBI=>q[0], Digest::MD5=>q[0], MIME::Base64=>q[0], Mouse=>q[0], Test::Carp=>q[0], Test::More=>q[0], YAML::XS=>q[0] }
+#     PREREQ_PM => { Carp=>q[0], Config::Any=>q[0], Crypt::Blowfish=>q[0], Crypt::CBC=>q[0], Cwd=>q[0], DBD::SQLite=>q[0], DBI=>q[0], Digest::MD5=>q[0], List::Util=>q[0], MIME::Base64=>q[0], Mouse=>q[0], Test::Carp=>q[0], Test::More=>q[0], YAML::XS=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/DBIx/Raw.pm]
 #     clean => { FILES=>q[DBIx-Raw-*] }
@@ -62,11 +62,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = DBIx::Raw
 NAME_SYM = DBIx_Raw
-VERSION = 0.13
+VERSION = 0.14
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_13
+VERSION_SYM = 0_14
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.13
+XS_VERSION = 0.14
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -267,7 +267,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = DBIx-Raw
-DISTVNAME = DBIx-Raw-0.13
+DISTVNAME = DBIx-Raw-0.14
 
 
 # --- MakeMaker macro section:
@@ -518,10 +518,11 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  Crypt::CBC: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBI: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Digest::MD5: '\''0'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) '  List::Util: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  MIME::Base64: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mouse: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.006'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.13'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.14'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
@@ -568,6 +569,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '            "Crypt::CBC" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBI" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Digest::MD5" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "List::Util" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "MIME::Base64" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mouse" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "perl" : "5.006"' >> META_new.json
@@ -575,7 +577,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.13"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.14"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
@@ -888,6 +890,7 @@ ppd :
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Crypt::CBC" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Digest::MD5" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="List::Util" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="MIME::Base64" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mouse::" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="darwin-2level-5.22" />' >> $(DISTNAME).ppd

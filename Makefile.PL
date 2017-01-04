@@ -30,6 +30,7 @@ WriteMakefile(
         'MIME::Base64' => 0,
         'Digest::MD5' => 0,
         'Carp' => 0,
+        'List::Util' => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'DBIx-Raw-*' },

@@ -1,5 +1,8 @@
 Revision history for DBIx-Raw
 
+0.14    July 10, 00:28 San Jose, CA
+        Added List::Util to deps.
+
 0.13    July 10, 00:23 San Jose, CA
         Fixed encrypt documentation. Added insert/insert encrypt method. Fixed update encrypt method. 
 
