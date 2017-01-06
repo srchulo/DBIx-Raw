@@ -19,7 +19,7 @@
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[DBIx::Raw]
 #     PL_FILES => {  }
-#     PREREQ_PM => { Carp=>q[0], Config::Any=>q[0], Crypt::Blowfish=>q[0], Crypt::CBC=>q[0], Cwd=>q[0], DBD::SQLite=>q[0], DBI=>q[0], Digest::MD5=>q[0], List::Util=>q[0], MIME::Base64=>q[0], Mouse=>q[0], Test::Carp=>q[0], Test::More=>q[0], YAML::XS=>q[0] }
+#     PREREQ_PM => { Carp=>q[0], Config::Any=>q[0], Crypt::Blowfish=>q[0], Crypt::CBC=>q[0], Crypt::Mode::CBC::Easy=>q[0], Cwd=>q[0], DBD::SQLite=>q[0], DBI=>q[0], Digest::MD5=>q[0], List::Util=>q[0], MIME::Base64=>q[0], Mouse=>q[0], Test::Carp=>q[0], Test::More=>q[0], YAML::XS=>q[0] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/DBIx/Raw.pm]
 #     clean => { FILES=>q[DBIx-Raw-*] }
@@ -62,11 +62,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = DBIx::Raw
 NAME_SYM = DBIx_Raw
-VERSION = 0.14
+VERSION = 0.15
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_14
+VERSION_SYM = 0_15
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.14
+XS_VERSION = 0.15
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -267,7 +267,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = DBIx-Raw
-DISTVNAME = DBIx-Raw-0.14
+DISTVNAME = DBIx-Raw-0.15
 
 
 # --- MakeMaker macro section:
@@ -480,7 +480,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
+	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -516,13 +516,14 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  Config::Any: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Crypt::Blowfish: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Crypt::CBC: '\''0'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Crypt::Mode::CBC::Easy: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DBI: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Digest::MD5: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  List::Util: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  MIME::Base64: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mouse: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.006'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.14'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.15'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
@@ -567,6 +568,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '            "Config::Any" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Crypt::Blowfish" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Crypt::CBC" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Crypt::Mode::CBC::Easy" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DBI" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Digest::MD5" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "List::Util" : "0",' >> META_new.json
@@ -577,7 +579,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.14"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.15"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
@@ -888,6 +890,7 @@ ppd :
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Config::Any" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Crypt::Blowfish" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Crypt::CBC" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Crypt::Mode::CBC::Easy" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Digest::MD5" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="List::Util" />' >> $(DISTNAME).ppd

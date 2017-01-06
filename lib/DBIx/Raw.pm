@@ -6,6 +6,7 @@ use Config::Any;
 use DBIx::Raw::Crypt;
 use Carp;
 use List::Util qw/first/;
+use Crypt::Mode::CBC::Easy;
 
 #have an errors file to write to
 has 'dsn'    => ( is => 'rw', isa => 'Any', default => undef);
@@ -13,9 +14,41 @@ has 'user'    => ( is => 'rw', isa => 'Any', default => undef);
 has 'password'    => ( is => 'rw', isa => 'Any', default => undef);
 has 'conf'    => ( is => 'rw', isa => 'Any', default => undef);
 has 'prev_conf'    => ( is => 'rw', isa => 'Str', default => '');
-has 'crypt_key'    => ( is => 'rw', isa => 'Str', default => '6883868834006296591264051568595813693328016796531185824375212916576042669669556288781800326542091901603033335703884439231366552922364658270813734165084102xfasdfa8823423sfasdfalkj!@#$$CCCFFF!09xxxxlai3847lol13234408!!@#$_+-083dxje380-=0');
 
 has 'crypt'    => ( 
+	is => 'ro', 
+	isa => 'Crypt::Mode::CBC::Easy',
+	lazy => 1,
+	default => sub { 
+		my ($self) = @_;
+		return Crypt::Mode::CBC::Easy->new(key => $self->crypt_key);
+	},
+);
+
+has 'crypt_key' => (
+    is => 'rw', 
+    isa => 'Str', 
+    lazy => 1,
+    default => sub {
+        my $crypt_key_hex = 'aea77496999d37bf47aedff9c0d44fdf2d2bbfa848ee6652abe9891b43e0f331';
+        return pack "H*", $crypt_key_hex;
+    }, 
+);
+
+has use_old_crypt => (
+    is => 'rw',
+    isa => 'Bool',
+    default => undef,
+);
+
+has 'old_crypt_key' => (
+    is => 'rw', 
+    isa => 'Str', 
+    lazy => 1,
+    default => '6883868834006296591264051568595813693328016796531185824375212916576042669669556288781800326542091901603033335703884439231366552922364658270813734165084102xfasdfa8823423sfasdfalkj!@#$$CCCFFF!09xxxxlai3847lol13234408!!@#$_+-083dxje380-=0'
+);
+
+has 'old_crypt'    => ( 
 	is => 'ro', 
 	isa => 'DBIx::Raw::Crypt', 
 	lazy => 1,
@@ -65,11 +98,11 @@ DBIx::Raw - Maintain control of SQL queries while still having a layer of abstra
 
 =head1 VERSION
 
-Version 0.14
+Version 0.15
 
 =cut
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 =head1 SYNOPSIS
 
@@ -308,7 +341,23 @@ or by setting it with its setter method:
 
     $db->crypt_key("1234");
 
-It is strongly recommended that you do not use the default L</"crypt_key">.
+It is strongly recommended that you do not use the default L</"crypt_key">. The L</crypt_key> should be the appropriate length
+for the L</crypt> that is set. The default L</crypt> uses L<Crypt::Mode::CBC::Easy>, which uses L<Crypt::Cipher::Twofish>, which
+allows key sizes of 128/192/256 bits.
+
+=head2 crypt
+
+The L<Crypt::Mode::CBC::Easy> object to use for encryption. Default is the default L<Crypt::Mode::CBC::Easy> object
+created with the key L</crypt_key>.
+
+=head2 use_old_crypt
+
+In version 0.15 L<DBIx::Raw> started using L<Crypt::Mode::CBC::Easy> instead of L<DBIx::Raw::Crypt>. Setting this to 1 uses the old encryption instead.
+Make sure to set L</old_crypt_key> if you previously used L</crypt_key> for encryption.
+
+=head2 old_crypt_key
+
+This sets the crypt key to use if L</use_old_crypt> is set to true. Default is the previous crypt key.
 
 =head1 SUBROUTINES/METHODS
 
@@ -885,7 +934,7 @@ However, this will not work. Instead, we need to do:
 
 Which evaluates to:
 
-    $db->raw(query => "INSERT INTO people (name, update_time=NOW())", vals => ['Billy']);
+    $db->raw(query => "INSERT INTO people (name, update_time) VALUES(?, NOW())", vals => ['Billy']);
 
 And this is what we want.
 
@@ -924,7 +973,6 @@ sub insert {
 		}
 		else { 
             if ($params->{encrypt} and first { $_ eq $key } @{$params->{encrypt}}) {
-                print "Adding $key as " . scalar(@vals). "\n";
                 push @encrypt, scalar(@vals);
             }
 
@@ -1392,11 +1440,21 @@ sub _crypt_encrypt {
 
 sub _encrypt { 
 	my ($self, $text) = @_;
-	return $self->crypt->encrypt($text); 
+
+    if ($self->use_old_crypt) {
+        return $self->old_crypt->encrypt($text);
+    }
+
+    return $self->crypt->encrypt($text); 
 }
 
 sub _decrypt { 
 	my ($self, $text) = @_;
+    
+    if ($self->use_old_crypt) {
+        return $self->old_crypt->decrypt($text);
+    }
+
 	return $self->crypt->decrypt($text); 
 }
 
