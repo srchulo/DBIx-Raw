@@ -62,11 +62,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = DBIx::Raw
 NAME_SYM = DBIx_Raw
-VERSION = 0.15
+VERSION = 0.16
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_15
+VERSION_SYM = 0_16
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.15
+XS_VERSION = 0.16
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -267,7 +267,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = DBIx-Raw
-DISTVNAME = DBIx-Raw-0.15
+DISTVNAME = DBIx-Raw-0.16
 
 
 # --- MakeMaker macro section:
@@ -480,7 +480,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -523,7 +523,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  MIME::Base64: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mouse: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.006'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.15'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.16'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
@@ -579,7 +579,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.15"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.16"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
