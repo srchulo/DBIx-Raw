@@ -1,6 +1,7 @@
 Revision history for DBIx-Raw
 
 {{$NEXT}}
+        - Add dependencies to cpanfile
 
 0.18  2019-01-13 14:20:39 CST
         - Update to using Moo

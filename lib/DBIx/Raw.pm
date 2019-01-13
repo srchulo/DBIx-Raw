@@ -1,9 +1,9 @@
 package DBIx::Raw;
 
 use 5.008_005;
-our $VERSION = '0.18';
+our $VERSION = '0.19';
 
-#use strictures 2;
+use strictures 2;
 use Moo;
 use Types::Standard qw/Bool HashRef InstanceOf Str/;
 use DBI;

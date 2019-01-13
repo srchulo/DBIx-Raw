@@ -37,12 +37,28 @@
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008005"
+            "Carp" : "0",
+            "Config::Any" : "0",
+            "Crypt::Blowfish" : "0",
+            "Crypt::CBC" : "0",
+            "Crypt::Mode::CBC::Easy" : "0",
+            "DBI" : "0",
+            "Digest::MD5" : "0",
+            "List::Util" : "0",
+            "MIME::Base64" : "0",
+            "Moo" : "0",
+            "Types::Standard" : "0",
+            "perl" : "5.008005",
+            "strictures" : "0"
          }
       },
       "test" : {
          "requires" : {
-            "Test::More" : "0.96"
+            "Cwd" : "0",
+            "DBD::SQLite" : "0",
+            "Test::Carp" : "0",
+            "Test::More" : "0.96",
+            "YAML::XS" : "0"
          }
       }
    },
@@ -58,7 +74,7 @@
          "web" : "https://github.com/srchulo/DBIx-Raw"
       }
    },
-   "version" : "0.18",
+   "version" : "0.19",
    "x_contributors" : [
       "Adam Hopkins <violapiratejunky@gmail.com>"
    ],
