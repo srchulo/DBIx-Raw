@@ -38,10 +38,10 @@ DBIx::Raw allows you to have complete control over your SQL, while still providi
     $db->raw("INSERT INTO people (name, age) VALUES (?, ?)", 'Sally', 26);
 
     #update records
-    $db->raw("UPDATE people SET name='Joe',age=34 WHERE id=1");
+    my $num_rows_updated = $db->raw("UPDATE people SET name='Joe',age=34 WHERE id=1");
 
     #use bind values to help prevent SQL injection
-    $db->raw("UPDATE people SET name=?,age=? WHERE id=?", 'Joe', 34, 1);
+    my $num_rows_updated = $db->raw("UPDATE people SET name=?,age=? WHERE id=?", 'Joe', 34, 1);
 
     #also use bind values when selecting
     my $name = $db->raw("SELECT name FROM people WHERE id=?", 1);
@@ -63,7 +63,7 @@ DBIx::Raw allows you to have complete control over your SQL, while still providi
     $db->update(href=>\%update, table => 'people', id=>1);
 
     #use alternate syntax to encrypt and decrypt data
-    $db->raw(query => "UPDATE people SET name=? WHERE id=1", vals => ['Joe'], encrypt => [0]);
+    my $num_rows_updated = $db->raw(query => "UPDATE people SET name=? WHERE id=1", vals => ['Joe'], encrypt => [0]);
 
     my $decrypted_name = $db->raw(query => "SELECT name FROM people WHERE id=1", decrypt => [0]);
 
@@ -139,7 +139,7 @@ or
 
 Below are some examples:
 
-    $db->raw("UPDATE people SET name='Fred'");
+    my $num_rows_updated = $db->raw("UPDATE people SET name='Fred'");
 
     my $name = $db->raw("SELECT name FROM people WHERE id=1");
         
@@ -147,7 +147,7 @@ Below are some examples:
 DBIx::Raw also supports ["Placeholders and Bind Values" in DBI](https://metacpan.org/pod/DBI#Placeholders-and-Bind-Values) for [DBI](https://metacpan.org/pod/DBI). These can be useful to help prevent SQL injection. Below are
 some examples of how to use placeholders and bind values with ["SIMPLE SYNTAX"](#simple-syntax).
 
-    $db->raw("UPDATE people SET name=?", 'Fred');
+    my $num_rows_updated = $db->raw("UPDATE people SET name=?", 'Fred');
 
     my $name = $db->raw("SELECT name FROM people WHERE id=?", 1);
 
@@ -161,23 +161,23 @@ Note that ["SIMPLE SYNTAX"](#simple-syntax) cannot be used for ["hoh"](#hoh), ["
 Advanced syntax is used whenever a subroutine requires extra parameters besides just the query and bind values, or whenever you need to use ["encrypt"](#encrypt)
 or ["decrypt"](#decrypt). A simple example of the advanced syntax is:
 
-    $db->raw(query => "UPDATE people SET name='Fred'");
+    my $num_rows_updated = $db->raw(query => "UPDATE people SET name='Fred'");
 
 This is equivalent to:
 
-    $db->raw("UPDATE people SET name='Fred'");
+    my $num_rows_updated = $db->raw("UPDATE people SET name='Fred'");
 
 A slightly more complex example adds in bind values:
 
-    $db->raw(query => "UPDATE people SET name=?", vals => ['Fred']);
+    my $num_rows_updated = $db->raw(query => "UPDATE people SET name=?", vals => ['Fred']);
 
 This is equivalent to the simple syntax:
 
-    $db->raw("UPDATE people SET name=?", 'Fred');
+    my $num_rows_updated = $db->raw("UPDATE people SET name=?", 'Fred');
 
 Also, advanced syntax is required whenevery you want to ["encrypt"](#encrypt) or ["decrypt"](#decrypt) values.
 
-    $db->raw(query => "UPDATE people SET name=?", vals => ['Fred'], encrypt => [0]);
+    my $num_rows_updated = $db->raw(query => "UPDATE people SET name=?", vals => ['Fred'], encrypt => [0]);
 
     my $decrypted_name = $db->raw(query => "SELECT name FROM people WHERE id=1", decrypt => [0]);
 
@@ -197,11 +197,11 @@ One thing to note is that both ["encrypt"](#encrypt) and ["decrypt"](#decrypt) r
 In order to encrypt values, the values that you want to encrypt must be in the bind values array reference that you pass into `vals`. Note that for the values that you want to
 encrypt, you should put their index into the encrypt array that you pass in. For example:
 
-    $db->raw(query => "UPDATE people SET name=?,age=?,height=? WHERE id=1", vals => ['Zoe', 24, "5'11"], encrypt => [0, 2]);
+    my $num_rows_updated = $db->raw(query => "UPDATE people SET name=?,age=?,height=? WHERE id=1", vals => ['Zoe', 24, "5'11"], encrypt => [0, 2]);
 
 In the above example, only `name` and `height` will be encrypted. You can easily encrypt all values by using '\*', like so:
 
-    $db->raw(query => "UPDATE people SET name=?,height=? WHERE id=1", vals => ['Zoe', "5'11"], encrypt => '*');
+    my $num_rows_updated = $db->raw(query => "UPDATE people SET name=?,height=? WHERE id=1", vals => ['Zoe', "5'11"], encrypt => '*');
 
 And this will encrypt both `name` and `height`.
 
@@ -539,7 +539,7 @@ Note we do not ecnrypt age because it is most likely stored as an integer in the
 - **pk (optional)** - A hash reference of the form `{name => 'column_name', val => 'unique_val'}`. Can be used instead of `id`. Should not be used if `id` is used
 - **where (optional)** - A where clause to help decide what row to update. Any bind values can be passed in with `vals`
 
-["update"](#update) can be used to update a single row with a hash. This can be useful if you already have the values you need
+["update"](#update) can be used to update a single row with a hash, and returns the number of rows updated. This can be useful if you already have the values you need
 to update the row with in a hash, where the keys are the column names and the values are the new values. This function
 might be useful for submitting forms easily.
 
@@ -549,21 +549,24 @@ might be useful for submitting forms easily.
         favorite_color => 'blue',
     );
 
-    $db->update(href => \%updated_person, table => 'people', id => 1);
+    my $num_rows_updated = $db->update(href => \%updated_person, table => 'people', id => 1);
+
+    # or in list context
+    my ($num_rows_updated) = $db->update(href => \%updated_person, table => 'people', id => 1);
 
 Note that above for "id", the column must actually be named id for it to work. If you have a primary key or unique
 identifying column that is named something different than id, then you can use the `pk` parameter:
 
-    $db->update(href => \%updated_person, table => 'people', pk => {name => 'person_id', val => 1});
+    my $num_rows_updated = $db->update(href => \%updated_person, table => 'people', pk => {name => 'person_id', val => 1});
 
 If you need to specify more constraints for the row that you are updating instead of just the id, you can pass in a where clause:
 
-    $db->update(href => \%updated_person, table => 'people', where => 'name=? AND favorite_color=? AND age=?', vals => ['Joe', 'green', 61]);
+    my $num_rows_updated = $db->update(href => \%updated_person, table => 'people', where => 'name=? AND favorite_color=? AND age=?', vals => ['Joe', 'green', 61]);
     
 
 Note that any bind values used in a where clause can just be passed into the `vals` as usual. It is possible to use a where clause and an id or pk together:
 
-    $db->update(href => \%updated_person, table => 'people', where => 'name=? AND favorite_color=? AND age=?', vals => ['Joe', 'green', 61], id => 1);
+    my $num_rows_updated = $db->update(href => \%updated_person, table => 'people', where => 'name=? AND favorite_color=? AND age=?', vals => ['Joe', 'green', 61], id => 1);
 
 Alternatively, you could just put the `id` or `pk` in your where clause.
 
@@ -578,11 +581,11 @@ If we had this:
         update_time => 'NOW()',
     );
 
-    $db->update(href => \%updated_person, table => 'people', id => 1);
+    my $num_rows_updated = $db->update(href => \%updated_person, table => 'people', id => 1);
 
 This would effectively evaluate to:
 
-    $db->raw(query => "UPDATE people SET name=?, update_time=? WHERE id=?", vals => ['Billy', 'NOW()', 1]);
+    my $num_rows_updated = $db->raw(query => "UPDATE people SET name=?, update_time=? WHERE id=?", vals => ['Billy', 'NOW()', 1]);
 
 However, this will not work. Instead, we need to do:
 
@@ -591,11 +594,11 @@ However, this will not work. Instead, we need to do:
         update_time => \'NOW()',
     );
 
-    $db->update(href => \%updated_person, table => 'people', id => 1);
+    my $num_rows_updated = $db->update(href => \%updated_person, table => 'people', id => 1);
 
 Which evaluates to:
 
-    $db->raw(query => "UPDATE people SET name=?, update_time=NOW() WHERE id=?", vals => ['Billy', 1]);
+    my $num_rows_updated = $db->raw(query => "UPDATE people SET name=?, update_time=NOW() WHERE id=?", vals => ['Billy', 1]);
 
 And this is what we want.
 
@@ -610,7 +613,7 @@ instead of the indices for the order in which the columns are listed:
         favorite_color => 'blue',
     );
 
-    $db->update(href => \%updated_person, table => 'people', id => 1, encrypt => ['name', 'favorite_color']);
+    my $num_rows_updated = $db->update(href => \%updated_person, table => 'people', id => 1, encrypt => ['name', 'favorite_color']);
 
 Note we do not ecnrypt age because it is most likely stored as an integer in the database.
 
