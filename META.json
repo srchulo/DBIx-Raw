@@ -47,7 +47,21 @@
       }
    },
    "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/srchulo/DBIx-Raw/issues"
+      },
+      "homepage" : "https://github.com/srchulo/DBIx-Raw",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/srchulo/DBIx-Raw.git",
+         "web" : "https://github.com/srchulo/DBIx-Raw"
+      }
+   },
    "version" : "0.18",
+   "x_contributors" : [
+      "Adam Hopkins <violapiratejunky@gmail.com>"
+   ],
    "x_generated_by_perl" : "v5.28.1",
    "x_serialization_backend" : "Cpanel::JSON::XS version 4.08",
    "x_static_install" : 1
