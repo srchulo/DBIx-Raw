@@ -1,6 +1,8 @@
 Revision history for DBIx-Raw
 
 {{$NEXT}}
+
+0.19  2019-01-13 14:36:52 CST
         - Add dependencies to cpanfile
 
 0.18  2019-01-13 14:20:39 CST
