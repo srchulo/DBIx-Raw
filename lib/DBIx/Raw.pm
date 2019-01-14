@@ -1,7 +1,7 @@
 package DBIx::Raw;
 
 use 5.008_005;
-our $VERSION = '0.20';
+our $VERSION = '0.21';
 
 use strictures 2;
 use Moo;
