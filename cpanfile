@@ -1,6 +1,6 @@
 requires 'perl', '5.008005';
 
-requires 'strictures';
+requires 'strictures', '2.000000';
 requires 'Moo';
 requires 'Types::Standard';
 requires 'DBI';

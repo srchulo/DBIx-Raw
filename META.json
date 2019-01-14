@@ -49,7 +49,7 @@
             "Moo" : "0",
             "Types::Standard" : "0",
             "perl" : "5.008005",
-            "strictures" : "0"
+            "strictures" : "2.000000"
          }
       },
       "test" : {
@@ -74,7 +74,7 @@
          "web" : "https://github.com/srchulo/DBIx-Raw"
       }
    },
-   "version" : "0.20",
+   "version" : "0.21",
    "x_contributors" : [
       "Adam Hopkins <violapiratejunky@gmail.com>"
    ],
