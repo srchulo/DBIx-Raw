@@ -44,10 +44,9 @@ has 'crypt_key' => (
     }, 
 );
 
-has use_old_crypt => (
+has 'use_old_crypt' => (
     is => 'rw',
     isa => Bool,
-    default => undef,
 );
 
 has 'old_crypt_key' => (
