@@ -17,7 +17,7 @@ DBIx::Raw allows you to have complete control over your SQL, while still providi
 
     #get multiple values in list context
     my ($name, $age) = $db->raw("SELECT name, age FROM people WHERE id=1");
-        
+
     #or
     my @person = $db->raw("SELECT name, age FROM people WHERE id=1");
 
@@ -48,13 +48,13 @@ DBIx::Raw allows you to have complete control over your SQL, while still providi
 
     #get multiple records as an array of hashes
     my $people = $db->aoh("SELECT name, age FROM people");
-    
-    for my $person (@$people) { 
+
+    for my $person (@$people) {
         print "$person->{name} is $person->{age} years old\n";
     }
 
     #update a record easily with a hash
-    my %update = ( 
+    my %update = (
         name => 'Joe',
         age => 34,
     );
@@ -106,9 +106,9 @@ Below is an example configuration file in perl format:
 
 ## conf.pl
 
-    { 
+    {
         dsn => 'dbi:mysql:test:localhost:3306',
-        user => 'root', 
+        user => 'root',
         password => 'password',
         crypt_key => 'lxsafadsfadskl23239210453453802xxx02-487900-=+1!:)',
     }
@@ -121,7 +121,7 @@ Below is an example configuration file in perl format:
     password: 'password'
     crypt_key: 'lxsafadsfadskl23239210453453802xxx02-487900-=+1!:)'
 
-Note that you do not need to include ["crypt\_key"](#crypt_key) if you just if you just want to use the file for configuration settings.
+Note that you do not need to include ["crypt\_key"](#crypt_key) if you just want to use the file for configuration settings.
 
 # SYNTAXES
 
@@ -142,7 +142,6 @@ Below are some examples:
     my $num_rows_updated = $db->raw("UPDATE people SET name='Fred'");
 
     my $name = $db->raw("SELECT name FROM people WHERE id=1");
-        
 
 DBIx::Raw also supports ["Placeholders and Bind Values" in DBI](https://metacpan.org/pod/DBI#Placeholders-and-Bind-Values) for [DBI](https://metacpan.org/pod/DBI). These can be useful to help prevent SQL injection. Below are
 some examples of how to use placeholders and bind values with ["SIMPLE SYNTAX"](#simple-syntax).
@@ -152,7 +151,6 @@ some examples of how to use placeholders and bind values with ["SIMPLE SYNTAX"](
     my $name = $db->raw("SELECT name FROM people WHERE id=?", 1);
 
     $db->raw("INSERT INTO people (name, age) VALUES (?, ?)", 'Frank', 44);
-    
 
 Note that ["SIMPLE SYNTAX"](#simple-syntax) cannot be used for ["hoh"](#hoh), ["hoaoh"](#hoaoh), ["hash"](#hash), or ["update"](#update) because of the extra parameters that they require.
 
@@ -189,7 +187,7 @@ You can use [DBIx::Raw](https://metacpan.org/pod/DBIx::Raw) to encrypt values wh
 Note that in order to store an encrypted value in the database, you should have the field be of type `VARCHAR(255)` or some type of character
 or text field where the encryption will fit. In order to encrypt and decrypt your values, [DBIx::Raw](https://metacpan.org/pod/DBIx::Raw) requires a ["crypt\_key"](#crypt_key). It contains a default
 key, but it is recommended that you change it either by having a different one in your ["conf"](#conf) file, or passing it in on creation with `new` or setting it using the
-["crypt\_key"](#crypt_key) method. It is recommended that you use a module like [Crypt::Random](https://metacpan.org/pod/Crypt::Random) to generate a secure key. 
+["crypt\_key"](#crypt_key) method. It is recommended that you use a module like [Crypt::Random](https://metacpan.org/pod/Crypt::Random) to generate a secure key.
 One thing to note is that both ["encrypt"](#encrypt) and ["decrypt"](#decrypt) require ["ADVANCED SYNTAX"](#advanced-syntax).
 
 ## encrypt
@@ -211,7 +209,7 @@ The only exception to the ["encrypt"](#encrypt) syntax that is a little differen
 
 When decrypting values, there are two possible different syntaxes.
 
-### DECRYPT LIST CONTEXT 
+### DECRYPT LIST CONTEXT
 
 If your query is returning a single value or values in a list context, then the array reference that you pass in for decrypt will contain the indices for the
 order that the columns were listed in. For instance:
@@ -220,7 +218,7 @@ order that the columns were listed in. For instance:
 
     my ($name, $age) = $db->raw(query => "SELECT name, age FROM people WHERE id=1", decrypt => [0,1]);
 
-### DECRYPT HASH CONTEXT 
+### DECRYPT HASH CONTEXT
 
 When your query has [DBIx::Raw](https://metacpan.org/pod/DBIx::Raw) return your values in a hash context, then the columns that you want decrypted must be listed by name in the array reference:
 
@@ -270,17 +268,17 @@ results returned, see one of the subroutines below.
 
 ["raw"](#raw) can be called in a scalar context to only return one value, or in a undef context to return no value. Below are some examples.
 
-       #select
-       my $name = $db->raw("SELECT name FROM people WHERE id=1");
+    #select
+    my $name = $db->raw("SELECT name FROM people WHERE id=1");
 
-       #update with number of rows updated returned
-       my $num_rows_updated = $db->raw("UPDATE people SET name=? WHERE id=1", 'Frank');
-    
-       #update in undef context, nothing returned.
-       $db->raw("UPDATE people SET name=? WHERE id=1", 'Frank');
+    #update with number of rows updated returned
+    my $num_rows_updated = $db->raw("UPDATE people SET name=? WHERE id=1", 'Frank');
 
-       #insert
-       $db->raw("INSERT INTO people (name, age) VALUES ('Jenny', 34)");
+    #update in undef context, nothing returned.
+    $db->raw("UPDATE people SET name=? WHERE id=1", 'Frank');
+
+    #insert
+    $db->raw("INSERT INTO people (name, age) VALUES ('Jenny', 34)");
 
 Note that to ["decrypt"](#decrypt) for ["SCALAR CONTEXT"](#scalar-context) for ["raw"](#raw), you would use ["DECRYPT LIST CONTEXT"](#decrypt-list-context).
 
@@ -317,7 +315,7 @@ Note that to ["decrypt"](#decrypt) for ["HASH CONTEXT"](#hash-context) for ["raw
 
     my $people = $db->aoh("SELECT * FROM people");
 
-    for my $person (@$people) { 
+    for my $person (@$people) {
         print "$person->{name} is $person->{age} years old\n";
     }
 
@@ -329,7 +327,7 @@ Note that to ["decrypt"](#decrypt) for ["aoh"](#aoh), you would use ["DECRYPT HA
 
     my $people = $db->aoa("SELECT name,age FROM people");
 
-    for my $person (@$people) { 
+    for my $person (@$people) {
         my $name = $person->[0];
         my $age = $person->[1];
         print "$name is $age years old\n";
@@ -348,13 +346,13 @@ this subroutine can be useful if you would like to be able to access rows by the
 
     my $people = $db->hoh(query => "SELECT id, name, age FROM people", key => "id");
 
-    for my $key(keys %$people) { 
+    for my $key(keys %$people) {
         my $person = $people->{$key};
         print "$person->{name} is $person->{age} years old\n";
     }
 
     #or
-    while(my ($key, $person) = each %$people) { 
+    while(my ($key, $person) = each %$people) {
         print "$person->{name} is $person->{age} years old\n";
     }
 
@@ -385,11 +383,11 @@ say that you wanted the id's of all people who have the same name grouped togeth
 
     my $hoa = $db->hoa(query => "SELECT id, name FROM people", key => "name", val => "id");
 
-    for my $name (%$hoa) { 
+    for my $name (%$hoa) {
         my $ids = $hoa->{$name};
 
         print "$name has ids ";
-        for my $id (@$ids) { 
+        for my $id (@$ids) {
             print " $id,";
         }
 
@@ -411,11 +409,11 @@ done like so:
 
     my $hoaoh = $db->hoaoh(query => "SELECT id, name, age FROM people", key => "name");
 
-    for my $name (keys %$hoaoh) { 
+    for my $name (keys %$hoaoh) {
         my $people = $hoaoh->{$name};
 
         print "People named $name: ";
-        for my $person (@$people) { 
+        for my $person (@$people) {
             print "  $person->{name} is $person->{age} years old\n";
         }
 
@@ -439,7 +437,7 @@ We could do that like so:
     my $ids = $db->array("SELECT id FROM people WHERE name='Susie'");
 
     print "Susie ids: \n";
-    for my $id (@$ids) { 
+    for my $id (@$ids) {
         print "$id\n";
     }
 
@@ -448,7 +446,7 @@ To ["decrypt"](#decrypt) for ["array"](#array), you would use ["DECRYPT LIST CON
 ## hash
 
 - **query (required)** - the query
-- **key (required)** - the name of the column that will serve as the key 
+- **key (required)** - the name of the column that will serve as the key
 - **val (required)** - the name of the column that will be stored behind the key
 - **href (optional)** - the hash reference that you would like to have the results added to
 
@@ -476,7 +474,7 @@ To ["decrypt"](#decrypt) for ["hash"](#hash), you would use ["DECRYPT HASH CONTE
 to insert the row with in a hash, where the keys are the column names and the values are the new values. This function
 might be useful for submitting forms easily.
 
-    my %person_to_insert = ( 
+    my %person_to_insert = (
         name => 'Billy',
         age => '32',
         favorite_color => 'blue',
@@ -518,10 +516,10 @@ And this is what we want.
 
 ### insert encrypt
 
-When encrypting for insert, because a hash is passed in you need to have the encrypt array reference contain the names of the columns that you want to encrypt 
+When encrypting for insert, because a hash is passed in you need to have the encrypt array reference contain the names of the columns that you want to encrypt
 instead of the indices for the order in which the columns are listed:
 
-    my %person_to_insert = ( 
+    my %person_to_insert = (
         name => 'Billy',
         age => '32',
         favorite_color => 'blue',
@@ -543,7 +541,7 @@ Note we do not ecnrypt age because it is most likely stored as an integer in the
 to update the row with in a hash, where the keys are the column names and the values are the new values. This function
 might be useful for submitting forms easily.
 
-    my %updated_person = ( 
+    my %updated_person = (
         name => 'Billy',
         age => '32',
         favorite_color => 'blue',
@@ -562,7 +560,6 @@ identifying column that is named something different than id, then you can use t
 If you need to specify more constraints for the row that you are updating instead of just the id, you can pass in a where clause:
 
     my $num_rows_updated = $db->update(href => \%updated_person, table => 'people', where => 'name=? AND favorite_color=? AND age=?', vals => ['Joe', 'green', 61]);
-    
 
 Note that any bind values used in a where clause can just be passed into the `vals` as usual. It is possible to use a where clause and an id or pk together:
 
@@ -604,10 +601,10 @@ And this is what we want.
 
 ### update encrypt
 
-When encrypting for update, because a hash is passed in you need to have the encrypt array reference contain the names of the columns that you want to encrypt 
+When encrypting for update, because a hash is passed in you need to have the encrypt array reference contain the names of the columns that you want to encrypt
 instead of the indices for the order in which the columns are listed:
 
-    my %updated_person = ( 
+    my %updated_person = (
         name => 'Billy',
         age => '32',
         favorite_color => 'blue',
@@ -721,7 +718,7 @@ When setting a new `conf`, it's likely you'll want to use ["connect"](#connect).
     #now there is a new dbh with the same DBIx::Raw object using the same settings
     $db->connect;
 
-Or you can change the connect info. 
+Or you can change the connect info.
 For example, if you update `dsn`, `user`, `password`:
 
     $db->dsn('new_dsn');
@@ -734,7 +731,7 @@ For example, if you update `dsn`, `user`, `password`:
 Or if you update the conf file:
 
     $db->conf('/path/to/new_conf.pl');
-    
+
     #get new dbh but keep same DBIx::Raw object
     $db->connect;
 
