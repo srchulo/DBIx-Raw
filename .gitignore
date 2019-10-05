@@ -1,5 +1,7 @@
-
-test.pl
-blib
+/DBIx-Raw-*
+/.build
+/_build*
+/Build
 MYMETA.*
-Makefile
+!META.json
+/.prove
