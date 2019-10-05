@@ -224,7 +224,7 @@ Below is an example configuration file in perl format:
     password: 'password'
     crypt_key: 'lxsafadsfadskl23239210453453802xxx02-487900-=+1!:)'
 
-Note that you do not need to include L</crypt_key> if you just if you just want to use the file for configuration settings.
+Note that you do not need to include L</crypt_key> if you just want to use the file for configuration settings.
 
 =head1 SYNTAXES
 
